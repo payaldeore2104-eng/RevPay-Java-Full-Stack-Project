@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Login – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body>
+    <button class="auth-float-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+        <span class="theme-icon">🌙</span>
+    </button>
+
+    <div class="auth-wrapper">
+        <!-- Left Hero Panel -->
+        <div class="auth-left">
+            <div style="position:relative;z-index:1;text-align:center;">
+                <div style="font-size:48px;margin-bottom:16px;">💳</div>
+                <div class="auth-brand">RevPay</div>
+                <div class="auth-tagline">Your modern financial companion for seamless digital payments</div>
+                <div class="auth-features">
+                    <div class="auth-feature">🔒 Bank-grade security &amp; encryption</div>
+                    <div class="auth-feature">⚡ Instant money transfers</div>
+                    <div class="auth-feature">📊 Smart spending analytics</div>
+                    <div class="auth-feature">🏦 Easy loan management</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Form Panel -->
+        <div class="auth-right">
+            <div class="auth-form-container fade-in">
+                <div style="font-size:32px;margin-bottom:12px;">👋</div>
+                <div class="auth-title">Welcome back</div>
+                <div class="auth-subtitle">Sign in to your RevPay account</div>
+
+                <div th:if="${error}" class="alert alert-danger">⚠️ <span th:text="${error}"></span></div>
+                <div th:if="${param.registered}" class="alert alert-success">✅ Registration successful. Please login.
+                </div>
+                <div th:if="${param.logout}" class="alert alert-info">👋 You have been safely logged out.</div>
+
+                <form th:action="@{/login}" th:object="${loginDto}" method="post">
+                    <div class="form-group">
+                        <label class="form-label">Email or Phone Number</label>
+                        <input type="text" th:field="*{loginId}" class="form-control" required
+                            placeholder="you@example.com" autocomplete="username" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div style="position:relative;">
+                            <input type="password" th:field="*{password}" class="form-control" required
+                                placeholder="Enter your password" id="loginPwd" autocomplete="current-password"
+                                style="padding-right:44px;" />
+                            <button type="button" onclick="togglePwd('loginPwd','eyeIcon')"
+                                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted);"
+                                id="eyeIcon">👁</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:6px;">
+                        Sign In →
+                    </button>
+                </form>
+
+                <div style="text-align:center;margin-top:20px;font-size:13px;color:var(--text-secondary);">
+                    <a th:href="@{/forgot-password}" style="color:var(--secondary-blue);font-weight:600;">Forgot
+                        Password?</a>
+                </div>
+                <div class="divider"></div>
+                <div style="text-align:center;font-size:13px;color:var(--text-secondary);">
+                    Don't have an account?
+                    <a th:href="@{/register}" style="color:var(--secondary-blue);font-weight:700;">Create one free →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePwd(id, btnId) {
+            var el = document.getElementById(id);
+            var btn = document.getElementById(btnId);
+            if (el.type === 'password') { el.type = 'text'; btn.textContent = '🙈'; }
+            else { el.type = 'password'; btn.textContent = '👁'; }
+        }
+    </script>
+</body>
+
+</html>

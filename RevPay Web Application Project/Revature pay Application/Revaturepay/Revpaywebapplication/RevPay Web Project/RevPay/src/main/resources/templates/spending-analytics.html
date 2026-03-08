@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Spending Analytics – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/analytics}">Analytics</a>
+                <a th:href="@{/analytics/spending}" class="active">Spending</a>
+            </nav>
+            <div class="header-right">
+                <span style="font-size:13px;opacity:.85;">👤 <span th:text="${user}">User</span></span>
+                <a th:href="@{/dashboard}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Dashboard</a>
+                <a th:href="@{/logout}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Logout</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Navigation</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/transactions/history}"><span class="sidebar-icon">📋</span> History</a>
+                <a th:href="@{/analytics}"><span class="sidebar-icon">📊</span> Analytics</a>
+                <a th:href="@{/analytics/spending}" class="active"><span class="sidebar-icon">📈</span> Spending</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="page-title">📊 Spending Analytics</div>
+                <div class="page-subtitle">Your personal financial insights for this month</div>
+
+                <!-- Summary Stats -->
+                <div class="grid-3 mb-24">
+                    <div class="stat-card">
+                        <div class="stat-icon red">💸</div>
+                        <div>
+                            <div class="stat-label">Total Sent</div>
+                            <div class="stat-value" style="color:var(--danger);">₹<span
+                                    th:text="${#numbers.formatDecimal(monthlySent, 1, 2)}">0.00</span></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">💰</div>
+                        <div>
+                            <div class="stat-label">Total Received</div>
+                            <div class="stat-value" style="color:var(--success);">₹<span
+                                    th:text="${#numbers.formatDecimal(monthlyReceived, 1, 2)}">0.00</span></div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" th:classappend="${netChangePositive} ? 'green' : 'red'">
+                            <span th:text="${netChangePositive} ? '📈' : '📉'">📈</span>
+                        </div>
+                        <div>
+                            <div class="stat-label">Net Change</div>
+                            <div class="stat-value"
+                                th:style="${netChangePositive} ? 'color:var(--success)' : 'color:var(--danger)'"
+                                th:text="${(netChangePositive ? '+₹' : '-₹') + #numbers.formatDecimal(netChange.abs(), 1, 2)}">
+                                ₹0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid-2 mb-24">
+                    <div class="card">
+                        <div class="section-title mb-16">📆 Weekly Spending</div>
+                        <div style="height:220px;"><canvas id="weeklyChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title mb-16">📅 Monthly Spending</div>
+                        <div style="height:220px;"><canvas id="monthlyChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title mb-16">🏷️ By Category</div>
+                        <div style="height:220px;"><canvas id="categoryChart"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title mb-16">👥 Top Payees</div>
+                        <div style="height:220px;"><canvas id="payeeChart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Tables -->
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="section-title mb-16">🏷️ Spending by Category</div>
+                        <div th:if="${#lists.isEmpty(categoryStats)}" class="empty-state">
+                            <div class="empty-icon">📊</div>
+                            <div class="empty-text">No category data this period.</div>
+                        </div>
+                        <div th:each="cat : ${categoryStats}"
+                            style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+                            <span style="font-weight:500;font-size:14px;" th:text="${cat.CATEGORY}"></span>
+                            <span style="font-weight:700;"
+                                th:text="'₹' + ${#numbers.formatDecimal(cat.TOTAL, 1, 2)}"></span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="section-title mb-16">👥 Most Frequent Payees</div>
+                        <div th:if="${#lists.isEmpty(topPayees)}" class="empty-state">
+                            <div class="empty-icon">👥</div>
+                            <div class="empty-text">No payee data available.</div>
+                        </div>
+                        <div th:each="payee : ${topPayees}"
+                            style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+                            <div>
+                                <div style="font-weight:600;font-size:14px;" th:text="${payee.PAYEE_NAME}"></div>
+                                <div style="font-size:11px;color:var(--text-muted);" th:text="${payee.PAYEE_EMAIL}">
+                                </div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div class="badge badge-info" th:text="${payee.TX_COUNT} + ' txns'"></div>
+                                <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;"
+                                    th:text="'₹' + ${#numbers.formatDecimal(payee.TOTAL_SENT, 1, 2)}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var weeklyTrend = /*[[${weeklyTrend}]]*/[];
+        var monthlyTrend = /*[[${monthlyTrend}]]*/[];
+        var categoryStats = /*[[${categoryStats}]]*/[];
+        var topPayees = /*[[${topPayees}]]*/[];
+
+        var wL = [], wD = [], mL = [], mD = [], cL = [], cD = [], pL = [], pD = [];
+        weeklyTrend.forEach(r => { wL.push(r.WEEK_LABEL || ''); wD.push(parseFloat(r.TOTAL || 0)); });
+        monthlyTrend.forEach(r => { mL.push(r.MONTH_LABEL || ''); mD.push(parseFloat(r.TOTAL || 0)); });
+        categoryStats.forEach(r => { cL.push(r.CATEGORY || ''); cD.push(parseFloat(r.TOTAL || 0)); });
+        topPayees.forEach(r => { pL.push(r.PAYEE_NAME || ''); pD.push(parseInt(r.TX_COUNT || 0)); });
+
+        var c = ['#2563EB', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+        document.addEventListener('DOMContentLoaded', function () {
+            new Chart(document.getElementById('weeklyChart'), {
+                type: 'bar', data: { labels: wL.length ? wL : ['W1', 'W2', 'W3', 'W4'], datasets: [{ label: 'Spent(₹)', data: wD.length ? wD : [0, 0, 0, 0], backgroundColor: 'rgba(37,99,235,.75)', borderRadius: 6, maxBarThickness: 40 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '₹' + v } } } }
+            });
+            new Chart(document.getElementById('monthlyChart'), {
+                type: 'line', data: { labels: mL, datasets: [{ label: 'Spending(₹)', data: mD, borderColor: '#2563EB', backgroundColor: 'rgba(37,99,235,.1)', tension: .4, fill: true, pointRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '₹' + v } } } }
+            });
+            new Chart(document.getElementById('categoryChart'), {
+                type: 'doughnut', data: { labels: cL.length ? cL : ['None'], datasets: [{ data: cD.length ? cD : [1], backgroundColor: c, borderWidth: 2, borderColor: 'var(--card-bg)' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+            });
+            new Chart(document.getElementById('payeeChart'), {
+                type: 'bar', data: { labels: pL.length ? pL : ['—'], datasets: [{ label: 'Txns', data: pD.length ? pD : [0], backgroundColor: 'rgba(139,92,246,.75)', borderRadius: 6, maxBarThickness: 30 }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+        });
+        /*]]>*/
+    </script>
+</body>
+
+</html>

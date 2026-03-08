@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Admin – Verification Review – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <style>
+        .action-textarea {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 12px;
+            resize: vertical;
+            min-height: 52px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/business/admin/verifications}" class="active">Verifications</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/dashboard}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Dashboard</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Admin</div>
+                <a th:href="@{/business/admin/verifications}" class="active"><span class="sidebar-icon">🔍</span>
+                    Verifications</a>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="page-title">🔍 Business Verification Review</div>
+                <div class="page-subtitle">Admin panel for reviewing and approving business documents</div>
+
+                <div th:if="${param.success}" class="alert alert-success">✅ Review submitted successfully.</div>
+                <div th:if="${param.error}" class="alert alert-danger">⚠️ Error: <span th:text="${param.error}"></span>
+                </div>
+
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="data-table" th:if="${not #lists.isEmpty(docs)}">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Business / User</th>
+                                    <th>Email</th>
+                                    <th>Doc Type</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="doc : ${docs}">
+                                    <td th:text="${doc['ID']}"></td>
+                                    <td>
+                                        <div style="font-weight:700;font-size:13px;"
+                                            th:text="${doc['BUSINESS_NAME'] != null ? doc['BUSINESS_NAME'] : doc['FULL_NAME']}">
+                                        </div>
+                                        <div style="font-size:11px;color:var(--text-muted);"
+                                            th:text="'User #' + ${doc['USER_ID']}"></div>
+                                    </td>
+                                    <td th:text="${doc['USER_EMAIL']}"></td>
+                                    <td th:text="${doc['DOC_TYPE']}"></td>
+                                    <td th:text="${doc['DOC_DESCRIPTION'] != null ? doc['DOC_DESCRIPTION'] : '—'}"></td>
+                                    <td><span th:class="'badge badge-' + ${doc['STATUS']}"
+                                            th:text="${doc['STATUS']}"></span></td>
+                                    <td
+                                        th:text="${doc['SUBMITTED_AT'] != null ? #dates.format(doc['SUBMITTED_AT'], 'dd MMM yyyy') : '—'}">
+                                    </td>
+                                    <td style="min-width:200px;">
+                                        <div th:if="${doc['STATUS'] == 'PENDING'}">
+                                            <form th:action="@{/business/admin/verifications/review}" method="post">
+                                                <input type="hidden" name="docId" th:value="${doc['ID']}" />
+                                                <textarea name="adminRemarks" class="action-textarea"
+                                                    placeholder="Optional remarks..."></textarea>
+                                                <div style="display:flex;gap:8px;">
+                                                    <button type="submit" name="decision" value="APPROVED"
+                                                        class="btn btn-success btn-sm"
+                                                        onclick="return confirm('Approve and verify this business account?')">✅
+                                                        Approve</button>
+                                                    <button type="submit" name="decision" value="REJECTED"
+                                                        class="btn btn-danger btn-sm"
+                                                        onclick="return confirm('Reject this submission?')">❌
+                                                        Reject</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div th:if="${doc['STATUS'] != 'PENDING'}"
+                                            style="font-size:13px;color:var(--text-secondary);">
+                                            Reviewed<br />
+                                            <span style="color:var(--text-muted);font-size:12px;"
+                                                th:text="${doc['ADMIN_REMARKS'] != null ? doc['ADMIN_REMARKS'] : '—'}"></span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="empty-state" th:if="${#lists.isEmpty(docs)}">
+                            <div class="empty-icon">📭</div>
+                            <div class="empty-text">No verification submissions found.</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

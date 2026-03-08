@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Apply for Loan – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <script>
+        function estimateEmi() {
+            var principal = document.getElementById('principal').value;
+            var months = document.getElementById('months').value;
+            if (!principal || !months) return;
+            fetch('/loans/estimate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ 'principal': principal, 'months': months })
+            }).then(r => r.text()).then(data => {
+                var emi = parseFloat(data).toFixed(2);
+                document.getElementById('emiDisplay').textContent = '₹' + emi + '/month';
+                document.getElementById('emiBox').style.display = 'block';
+            });
+        }
+    </script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/loans}" class="active">Loans</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/loans}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">←
+                    Loans</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Navigation</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/wallet}"><span class="sidebar-icon">👜</span> Wallet</a>
+                <a th:href="@{/loans}" class="active"><span class="sidebar-icon">🏦</span> Loans</a>
+                <a th:href="@{/loans/apply}"><span class="sidebar-icon">📝</span> Apply Loan</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="page-title">📝 Apply for a Loan</div>
+                <div class="page-subtitle">Current interest rate: <strong style="color:var(--secondary-blue);">12.0% per
+                        annum</strong></div>
+
+                <div th:if="${error}" class="alert alert-danger">❌ <span th:text="${error}"></span></div>
+                <div th:if="${success}" class="alert alert-success">✅ <span th:text="${success}"></span></div>
+
+                <div style="max-width:600px;">
+                    <div class="card">
+                        <form th:action="@{/loans/apply}" method="post" enctype="multipart/form-data">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Principal Amount (INR)</label>
+                                    <input type="number" step="0.01" name="principal" id="principal" required
+                                        class="form-control" placeholder="e.g. 50000" oninput="estimateEmi()" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Tenure (Months)</label>
+                                    <input type="number" name="months" id="months" required min="1" max="120"
+                                        class="form-control" placeholder="e.g. 24" oninput="estimateEmi()" />
+                                </div>
+                            </div>
+
+                            <!-- EMI Preview -->
+                            <div id="emiBox" class="dashboard-card mb-20" style="display:none;padding:18px 22px;">
+                                <h2>Monthly EMI Estimate</h2>
+                                <div class="amount" id="emiDisplay" style="font-size:32px;">₹0.00</div>
+                                <div class="subtitle">Approximate; final amount may vary</div>
+                            </div>
+
+                            <button type="button" class="btn btn-ghost mb-20" onclick="estimateEmi()">🧮 Calculate
+                                EMI</button>
+
+                            <div class="form-group">
+                                <label class="form-label">Purpose of Loan</label>
+                                <input type="text" name="purpose" required class="form-control"
+                                    placeholder="e.g. Business Expansion, Equipment, Education" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Financial Details</label>
+                                <input type="text" name="financialDetails" required class="form-control"
+                                    placeholder="e.g. ₹5L Annual Revenue, No Existing Debt" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Supporting Documents <span
+                                        style="font-weight:400;color:var(--text-muted);">(optional – PDF,
+                                        JPG)</span></label>
+                                <input type="file" name="document" class="form-control" />
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block btn-lg">Submit Application →</button>
+                        </form>
+                    </div>
+
+                    <div class="card" style="margin-top:16px;background:var(--info-bg);border-color:var(--border);">
+                        <div style="font-weight:700;margin-bottom:8px;color:var(--info-text);">💡 Loan Terms</div>
+                        <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;">
+                            <li style="font-size:13px;color:var(--info-text);">📈 Interest rate: 12% per annum (1% per
+                                month)</li>
+                            <li style="font-size:13px;color:var(--info-text);">📅 Tenure: 1 to 120 months</li>
+                            <li style="font-size:13px;color:var(--info-text);">⚡ Approval within 2 business days</li>
+                            <li style="font-size:13px;color:var(--info-text);">💰 Minimum loan: ₹1,000</li>
+                        </ul>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

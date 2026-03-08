@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>My Loans – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/loans}" class="active">Loans</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/dashboard}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Dashboard</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Navigation</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/wallet}"><span class="sidebar-icon">👜</span> Wallet</a>
+                <a th:href="@{/loans}" class="active"><span class="sidebar-icon">🏦</span> Loans</a>
+                <a th:href="@{/loans/apply}"><span class="sidebar-icon">📝</span> Apply Loan</a>
+                <a th:href="@{/analytics}"><span class="sidebar-icon">📊</span> Analytics</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="flex-between mb-24">
+                    <div>
+                        <div class="page-title">🏦 Loan Center</div>
+                        <div class="page-subtitle">Manage all your loan accounts and EMI payments</div>
+                    </div>
+                    <a th:href="@{/loans/apply}" class="btn btn-primary">+ Apply New Loan</a>
+                </div>
+
+                <div th:if="${error}" class="alert alert-danger">❌ <span th:text="${error}"></span></div>
+                <div th:if="${success}" class="alert alert-success">✅ <span th:text="${success}"></span></div>
+
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="data-table" th:if="${loans != null and !#lists.isEmpty(loans)}">
+                            <thead>
+                                <tr>
+                                    <th>Loan ID</th>
+                                    <th>Principal</th>
+                                    <th>Purpose</th>
+                                    <th>Interest</th>
+                                    <th>Tenure</th>
+                                    <th>Monthly EMI</th>
+                                    <th>Next Due</th>
+                                    <th>Repaid</th>
+                                    <th>Status</th>
+                                    <th>Applied</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="l : ${loans}">
+                                    <td style="font-family:monospace;font-size:12px;" th:text="'LN-' + ${l.ID}"></td>
+                                    <td style="font-weight:700;" th:text="'₹' + ${l.PRINCIPAL_AMOUNT}"></td>
+                                    <td th:text="${l.PURPOSE}"></td>
+                                    <td th:text="${l.INTEREST_RATE + '%'}"></td>
+                                    <td th:text="${l.TENURE_MONTHS + ' M'}"></td>
+                                    <td style="font-weight:700;" th:text="'₹' + ${l.EMI_AMOUNT}"></td>
+                                    <td>
+                                        <div th:if="${l.STATUS == 'APPROVED'}">
+                                            <span style="color:var(--danger);font-weight:700;"
+                                                th:text="'₹' + ${#numbers.formatDecimal(l.NEXT_PAYMENT_AMOUNT, 1, 2)}"></span><br />
+                                            <span style="font-size:11px;color:var(--text-muted);"
+                                                th:text="'Due: ' + ${#calendars.format(l.NEXT_PAYMENT_DATE, 'dd MMM yyyy')}"></span>
+                                        </div>
+                                        <span th:if="${l.STATUS == 'REPAID'}" class="badge badge-success">Fully
+                                            Paid</span>
+                                        <span th:if="${l.STATUS != 'APPROVED' and l.STATUS != 'REPAID'}"
+                                            class="text-muted">—</span>
+                                    </td>
+                                    <td th:text="'₹' + ${l.REPAID_AMOUNT != null ? l.REPAID_AMOUNT : 0}"></td>
+                                    <td><span th:class="'badge ' + ${l.STATUS}" th:text="${l.STATUS}"></span></td>
+                                    <td th:text="${#calendars.format(l.CREATED_AT, 'dd MMM yyyy')}"></td>
+                                    <td>
+                                        <form th:if="${l.STATUS == 'APPROVED'}" th:action="@{/loans/repay}"
+                                            method="post" style="display:inline;">
+                                            <input type="hidden" name="loanId" th:value="${l.ID}" />
+                                            <input type="hidden" name="amount" th:value="${l.EMI_AMOUNT}" />
+                                            <button class="btn btn-success btn-sm">Pay EMI</button>
+                                        </form>
+                                        <span th:if="${l.STATUS != 'APPROVED'}" class="text-muted">—</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="empty-state" th:if="${loans == null or #lists.isEmpty(loans)}">
+                            <div class="empty-icon">🏦</div>
+                            <div class="empty-text">No loans yet. Apply for your first loan.</div>
+                            <a th:href="@{/loans/apply}" class="btn btn-primary btn-sm" style="margin-top:12px;">Apply
+                                Now</a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

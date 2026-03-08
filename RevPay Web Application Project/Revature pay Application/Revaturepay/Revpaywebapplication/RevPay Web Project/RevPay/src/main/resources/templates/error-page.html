@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Error – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body class="fade-in"
+    style="display:flex;flex-direction:column;min-height:100vh;justify-content:center;align-items:center;background:var(--bg);padding:24px;">
+    <button class="auth-float-toggle" onclick="toggleTheme()" title="Toggle Dark Mode"><span
+            class="theme-icon">🌙</span></button>
+    <div style="width:100%;max-width:580px;text-align:center;">
+        <div class="card" style="padding:48px 36px;">
+            <div style="font-size:72px;margin-bottom:20px;">⚠️</div>
+            <h1 style="font-size:26px;font-weight:800;color:var(--text-primary);margin-bottom:12px;"
+                th:text="${errorTitle} ?: 'Something Went Wrong'">Error</h1>
+            <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:24px;">
+                An error occurred while processing your request. This is often because the
+                <strong style="color:var(--danger);">Oracle database is not running</strong> or the required tables /
+                procedures
+                haven't been created yet.
+            </p>
+            <div class="alert alert-warning" th:if="${errorMessage}" style="text-align:left;">
+                <strong>Error Details:</strong><br />
+                <span th:text="${errorMessage}"></span>
+            </div>
+            <div class="alert alert-warning" th:if="${requestedUrl}" style="text-align:left;margin-top:8px;">
+                <strong>Requested URL:</strong><br />
+                <span th:text="${requestedUrl}"></span>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;">
+                <a th:href="@{/dashboard}" class="btn btn-primary">🏠 Dashboard</a>
+                <a href="javascript:history.back()" class="btn btn-ghost">← Go Back</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

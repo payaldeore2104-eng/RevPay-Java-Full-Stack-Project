@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title th:text="'Invoice #' + ${invoice.ID} + ' – RevPay'">Invoice – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/notifications}">Notifications</a>
+            </nav>
+            <div class="header-right">
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/notifications}"><span class="sidebar-icon">🔔</span> Notifications</a>
+            </aside>
+            <main class="revpay-main">
+                <a th:href="@{/dashboard}"
+                    style="display:inline-flex;align-items:center;gap:6px;color:var(--secondary-blue);font-size:13px;font-weight:600;text-decoration:none;margin-bottom:18px;">←
+                    Back to Dashboard</a>
+
+                <div th:if="${error}" class="alert alert-danger">⚠ <span th:text="${error}"></span></div>
+
+                <!-- Invoice Header Card -->
+                <div class="card mb-20">
+                    <div
+                        style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;margin-bottom:20px;">
+                        <div>
+                            <div style="font-size:26px;font-weight:800;color:var(--secondary-blue);">Invoice #<span
+                                    th:text="${invoice.ID}"></span></div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;">
+                            <a th:href="@{'/business/invoices/' + ${invoice.ID} + '/pdf'}"
+                                class="btn btn-ghost btn-sm">📄 Download PDF</a>
+                            <span th:class="'badge ' + ${invoice.STATUS}" th:text="${invoice.STATUS}"></span>
+                        </div>
+                    </div>
+
+                    <hr style="border:none;border-top:1px solid var(--border);margin:0 0 18px;" />
+
+                    <!-- From/To -->
+                    <div class="grid-2 mb-20">
+                        <div style="background:var(--bg-alt);border-radius:var(--radius-md);padding:16px;">
+                            <div
+                                style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">
+                                Bill From</div>
+                            <div style="font-weight:700;font-size:15px;" th:text="${invoice.BUSINESS_NAME}">—</div>
+                            <div style="font-size:13px;color:var(--text-secondary);"
+                                th:text="${invoice.BUSINESS_EMAIL}">—</div>
+                        </div>
+                        <div style="background:var(--bg-alt);border-radius:var(--radius-md);padding:16px;">
+                            <div
+                                style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">
+                                Bill To</div>
+                            <div style="font-weight:700;font-size:15px;" th:text="${invoice.CUSTOMER_NAME}">—</div>
+                            <div style="font-size:13px;color:var(--text-secondary);"
+                                th:text="${invoice.CUSTOMER_EMAIL}">—</div>
+                            <div style="font-size:13px;color:var(--text-secondary);"
+                                th:text="${invoice.CUSTOMER_ADDRESS}">—</div>
+                        </div>
+                    </div>
+
+                    <!-- Meta Grid -->
+                    <div
+                        style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:20px;">
+                        <div>
+                            <div
+                                style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;letter-spacing:.8px;margin-bottom:4px;">
+                                Due Date</div>
+                            <div style="font-weight:600;" th:text="${#dates.format(invoice.DUE_DATE,'dd MMM yyyy')}">—
+                            </div>
+                        </div>
+                        <div>
+                            <div
+                                style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;letter-spacing:.8px;margin-bottom:4px;">
+                                Created On</div>
+                            <div style="font-weight:600;" th:text="${#dates.format(invoice.CREATED_AT,'dd MMM yyyy')}">—
+                            </div>
+                        </div>
+                        <div>
+                            <div
+                                style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;letter-spacing:.8px;margin-bottom:4px;">
+                                Payment Terms</div>
+                            <div style="font-weight:600;" th:text="${invoice.PAYMENT_TERMS}">—</div>
+                        </div>
+                        <div>
+                            <div
+                                style="font-size:11px;color:var(--text-muted);text-transform:uppercase;font-weight:700;letter-spacing:.8px;margin-bottom:4px;">
+                                Total Amount</div>
+                            <div style="font-size:20px;font-weight:800;color:var(--secondary-blue);"
+                                th:text="'₹' + ${#numbers.formatDecimal(invoice.TOTAL_AMOUNT,1,2)}">₹0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line Items -->
+                <div class="card mb-20">
+                    <div class="section-title mb-16">Line Items</div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Tax</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${items}">
+                                    <td th:text="${item.DESCRIPTION}"></td>
+                                    <td th:text="${item.QUANTITY}"></td>
+                                    <td th:text="'₹' + ${#numbers.formatDecimal(item.UNIT_PRICE,1,2)}"></td>
+                                    <td th:text="'₹' + ${#numbers.formatDecimal(item.TAX,1,2)}"></td>
+                                    <td style="font-weight:700;"
+                                        th:text="'₹' + ${#numbers.formatDecimal(item.LINE_TOTAL,1,2)}"></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr style="background:var(--bg-alt);">
+                                    <td colspan="4" style="text-align:right;font-weight:700;padding-right:20px;">Grand
+                                        Total</td>
+                                    <td style="font-size:16px;font-weight:800;color:var(--secondary-blue);"
+                                        th:text="'₹' + ${#numbers.formatDecimal(invoice.TOTAL_AMOUNT,1,2)}"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Payment (Customer view, unpaid) -->
+                <div th:if="${isCustomer and invoice.STATUS != 'PAID' and invoice.STATUS != 'CANCELLED'}"
+                    class="dashboard-card">
+                    <div style="position:relative;z-index:1;">
+                        <h2>💳 Pay This Invoice</h2>
+                        <p style="font-size:13px;opacity:.85;margin:6px 0 20px;">Enter your transaction PIN to authorise
+                            payment. A receipt PDF will download automatically.</p>
+                        <div
+                            style="background:rgba(255,255,255,.15);border-radius:12px;padding:16px 20px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:13px;font-weight:600;">Amount Due</span>
+                            <span style="font-size:26px;font-weight:800;"
+                                th:text="'₹' + ${#numbers.formatDecimal(invoice.TOTAL_AMOUNT,1,2)}">₹0</span>
+                        </div>
+                        <form th:action="@{'/invoices/' + ${invoice.ID} + '/pay'}" method="post">
+                            <div class="form-group">
+                                <label class="form-label" style="color:rgba(255,255,255,.9);">Transaction PIN</label>
+                                <input type="password" name="pin" class="pin-input"
+                                    style="border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;"
+                                    placeholder="Enter your PIN" maxlength="6" required autocomplete="off" />
+                            </div>
+                            <button type="submit"
+                                style="width:100%;padding:14px;background:#fff;color:var(--primary-blue);font-size:15px;font-weight:800;border:none;border-radius:10px;cursor:pointer;transition:transform .15s;"
+                                onmouseover="this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.transform='translateY(0)'">
+                                🔒 Pay ₹<span th:text="${#numbers.formatDecimal(invoice.TOTAL_AMOUNT,1,2)}">0</span> Now
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Already paid -->
+                <div th:if="${invoice.STATUS == 'PAID'}" class="alert alert-success"
+                    style="font-size:15px;text-align:center;padding:24px;">
+                    <div style="font-size:48px;margin-bottom:10px;">✅</div>
+                    <div style="font-weight:800;font-size:18px;">Invoice Paid</div>
+                    <div style="font-size:13px;margin-top:6px;">This invoice has already been marked as paid. Thank you!
+                    </div>
+                </div>
+
+                <!-- Cancelled -->
+                <div th:if="${invoice.STATUS == 'CANCELLED'}" class="alert alert-warning"
+                    style="font-size:14px;text-align:center;">
+                    🚫 This invoice has been cancelled and is no longer payable.
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

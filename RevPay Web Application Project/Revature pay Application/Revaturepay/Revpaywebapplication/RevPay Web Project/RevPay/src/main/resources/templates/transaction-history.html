@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Transaction History – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <script>
+        function updateExportLinks() {
+            var form = document.getElementById('filterForm');
+            var params = new URLSearchParams(new FormData(form)).toString();
+            document.getElementById('exportCsvBtn').href = '/transactions/export?' + params;
+            document.getElementById('exportPdfBtn').href = '/transactions/export/pdf?' + params;
+        }
+        function openPinModal(requestId, amount) {
+            document.getElementById('pinModalRequestId').value = requestId;
+            document.getElementById('pinModalAmount').textContent = '₹' + amount;
+            document.getElementById('pinModalInput').value = '';
+            document.getElementById('pinModal').classList.add('active');
+            document.getElementById('pinModalInput').focus();
+        }
+        function closePinModal() { document.getElementById('pinModal').classList.remove('active'); }
+        document.addEventListener('DOMContentLoaded', function () {
+            var form = document.getElementById('filterForm');
+            if (form) { form.addEventListener('change', updateExportLinks); form.addEventListener('keyup', updateExportLinks); updateExportLinks(); }
+            var overlay = document.getElementById('pinModal');
+            if (overlay) { overlay.addEventListener('click', function (e) { if (e.target === this) closePinModal(); }); }
+        });
+    </script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/wallet}">Wallet</a>
+                <a th:href="@{/transactions/history}" class="active">Transactions</a>
+                <a th:href="@{/notifications}">Notifications</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/dashboard}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Dashboard</a>
+                <a th:href="@{/logout}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Logout</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Navigation</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/wallet}"><span class="sidebar-icon">👜</span> Wallet</a>
+                <a th:href="@{/wallet/cards}"><span class="sidebar-icon">💳</span> Cards</a>
+                <a th:href="@{/transactions/send}"><span class="sidebar-icon">💸</span> Send Money</a>
+                <a th:href="@{/transactions/request}"><span class="sidebar-icon">📥</span> Request Money</a>
+                <a th:href="@{/transactions/history}" class="active"><span class="sidebar-icon">📋</span> History</a>
+                <div class="sidebar-section-label">More</div>
+                <a th:href="@{/loans}"><span class="sidebar-icon">🏦</span> Loans</a>
+                <a th:href="@{/analytics}"><span class="sidebar-icon">📊</span> Analytics</a>
+                <a th:href="@{/notifications}"><span class="sidebar-icon">🔔</span> Notifications</a>
+                <a th:href="@{/profile}"><span class="sidebar-icon">⚙️</span> Profile</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="flex-between mb-24">
+                    <div>
+                        <div class="page-title">Transaction History</div>
+                        <div class="page-subtitle">All your money transfers and requests</div>
+                    </div>
+                    <div class="flex gap-8">
+                        <a href="#" id="exportCsvBtn" class="btn btn-ghost btn-sm">⬇️ CSV</a>
+                        <a href="#" id="exportPdfBtn" class="btn btn-danger btn-sm">📄 PDF</a>
+                    </div>
+                </div>
+
+                <!-- Banners -->
+                <div th:if="${successMsg}" class="alert alert-success">✅ <span th:text="${successMsg}"></span></div>
+                <div th:if="${errorMsg}" class="alert alert-danger">❌ <span th:text="${errorMsg}"></span></div>
+
+                <!-- Filters -->
+                <form id="filterForm" class="filter-bar" th:action="@{/transactions/history}" method="get">
+                    <div class="filter-group">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="searchQuery" th:value="${searchQuery}" class="form-control"
+                            placeholder="Name or description" />
+                    </div>
+                    <div class="filter-group">
+                        <label class="form-label">Type</label>
+                        <select name="type" class="form-control">
+                            <option value="">All Types</option>
+                            <option value="SENT" th:selected="${type == 'SENT'}">Sent</option>
+                            <option value="RECEIVED" th:selected="${type == 'RECEIVED'}">Received</option>
+                            <option value="DEPOSIT" th:selected="${type == 'DEPOSIT'}">Money Added</option>
+                            <option value="WITHDRAWAL" th:selected="${type == 'WITHDRAWAL'}">Withdrawal</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-control">
+                            <option value="">All Statuses</option>
+                            <option value="COMPLETED" th:selected="${status == 'COMPLETED'}">Completed</option>
+                            <option value="PENDING" th:selected="${status == 'PENDING'}">Pending</option>
+                            <option value="FAILED" th:selected="${status == 'FAILED'}">Failed</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="form-label">From Date</label>
+                        <input type="date" name="startDate" th:value="${startDate}" class="form-control" />
+                    </div>
+                    <div class="filter-group">
+                        <label class="form-label">To Date</label>
+                        <input type="date" name="endDate" th:value="${endDate}" class="form-control" />
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:flex-end;">
+                        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                        <a th:href="@{/transactions/history}" class="btn btn-ghost btn-sm">Clear</a>
+                    </div>
+                </form>
+
+                <!-- Money Transfers -->
+                <div class="card mb-20">
+                    <div class="section-title" style="margin-bottom:16px;">💸 Money Transfers</div>
+                    <div class="table-wrapper">
+                        <table class="data-table" th:if="${transactions != null and !#lists.isEmpty(transactions)}">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Reference ID</th>
+                                    <th>Type / Party</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Receipt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="tx : ${transactions}">
+                                    <td th:text="${tx['CREATED_AT']}"></td>
+                                    <td style="font-family:monospace;font-size:12px;color:var(--text-muted);"
+                                        th:text="${tx['TRANSACTION_ID'] ?: '-'}"></td>
+                                    <td>
+                                        <span th:if="${tx['TRANSACTION_TYPE'] == 'DEPOSIT'}"><strong>Money
+                                                Added</strong></span>
+                                        <span
+                                            th:if="${tx['TRANSACTION_TYPE'] == 'WITHDRAWAL'}"><strong>Withdrawal</strong></span>
+                                        <span
+                                            th:if="${tx['TRANSACTION_TYPE'] == 'TRANSFER' and tx['DIRECTION'] == 'SENT'}">Sent
+                                            to <strong th:text="${tx['COUNTERPARTY_NAME']}"></strong></span>
+                                        <span
+                                            th:if="${tx['TRANSACTION_TYPE'] == 'TRANSFER' and tx['DIRECTION'] == 'RECEIVED'}">From
+                                            <strong th:text="${tx['COUNTERPARTY_NAME']}"></strong></span>
+                                    </td>
+                                    <td style="font-weight:700;"
+                                        th:classappend="${tx['DIRECTION'] == 'SENT'} ? 'text-danger' : 'text-success'"
+                                        th:text="${(tx['DIRECTION'] == 'SENT' ? '-' : '+') + ' ₹' + tx['AMOUNT']}"></td>
+                                    <td th:text="${tx['DESCRIPTION']}"></td>
+                                    <td><span th:class="'badge ' + ${tx['STATUS']}" th:text="${tx['STATUS']}"></span>
+                                    </td>
+                                    <td>
+                                        <a th:if="${tx['STATUS'] == 'COMPLETED'}"
+                                            th:href="'/transactions/' + ${tx['ID']} + '/receipt'" target="_blank"
+                                            class="btn btn-ghost btn-sm">📄 Receipt</a>
+                                        <span th:if="${tx['STATUS'] != 'COMPLETED'}" class="text-muted">—</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="empty-state" th:if="${transactions == null or #lists.isEmpty(transactions)}">
+                            <div class="empty-icon">📭</div>
+                            <div class="empty-text">No money transfers found.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Money Requests -->
+                <div class="card">
+                    <div class="section-title" style="margin-bottom:16px;">📥 Money Requests</div>
+                    <div class="table-wrapper">
+                        <table class="data-table" th:if="${requests != null and !#lists.isEmpty(requests)}">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Details</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="req : ${requests}">
+                                    <td th:text="${req['CREATED_AT']}"></td>
+                                    <td>
+                                        <span th:if="${req['DIRECTION'] == 'REQUESTED_BY_ME'}">Requested from <strong
+                                                th:text="${req['COUNTERPARTY_NAME']}"></strong></span>
+                                        <span th:if="${req['DIRECTION'] == 'REQUESTED_FROM_ME'}"><strong
+                                                th:text="${req['COUNTERPARTY_NAME']}"></strong> requested money</span>
+                                    </td>
+                                    <td style="font-weight:700;" th:text="${'₹' + req['AMOUNT']}"></td>
+                                    <td><span th:class="'badge ' + ${req['STATUS']}" th:text="${req['STATUS']}"></span>
+                                    </td>
+                                    <td>
+                                        <div th:if="${req['STATUS'] == 'PENDING'}" style="display:flex;gap:8px;">
+                                            <button type="button" th:if="${req['DIRECTION'] == 'REQUESTED_FROM_ME'}"
+                                                class="btn btn-success btn-sm"
+                                                th:onclick="|openPinModal('${req['ID']}', '${req['AMOUNT']}');|">Accept
+                                                &amp; Pay</button>
+                                            <form th:if="${req['DIRECTION'] == 'REQUESTED_FROM_ME'}"
+                                                th:action="@{/transactions/request/update}" method="post"
+                                                style="display:inline;">
+                                                <input type="hidden" name="requestId" th:value="${req['ID']}" />
+                                                <input type="hidden" name="status" value="DECLINED" />
+                                                <button class="btn btn-danger btn-sm">Decline</button>
+                                            </form>
+                                            <form th:if="${req['DIRECTION'] == 'REQUESTED_BY_ME'}"
+                                                th:action="@{/transactions/request/update}" method="post"
+                                                style="display:inline;">
+                                                <input type="hidden" name="requestId" th:value="${req['ID']}" />
+                                                <input type="hidden" name="status" value="CANCELLED" />
+                                                <button class="btn btn-ghost btn-sm">Cancel</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="empty-state" th:if="${requests == null or #lists.isEmpty(requests)}">
+                            <div class="empty-icon">📭</div>
+                            <div class="empty-text">No money requests found.</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- PIN Modal -->
+    <div id="pinModal" class="modal-overlay">
+        <div class="modal-box">
+            <button class="modal-close" type="button" onclick="closePinModal()">✕</button>
+            <div class="modal-title">🔐 Confirm Payment</div>
+            <div class="modal-desc">You are about to pay <strong id="pinModalAmount"></strong>. Enter your Transaction
+                PIN to confirm.</div>
+            <form action="/transactions/request/update" method="post">
+                <input type="hidden" id="pinModalRequestId" name="requestId" value="" />
+                <input type="hidden" name="status" value="ACCEPTED" />
+                <div class="form-group">
+                    <label class="form-label">Transaction PIN</label>
+                    <input type="password" id="pinModalInput" name="pin" class="pin-input" maxlength="10"
+                        placeholder="••••••" autocomplete="off" required />
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <button type="button" class="btn btn-ghost btn-block" onclick="closePinModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success btn-block">Confirm &amp; Pay</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

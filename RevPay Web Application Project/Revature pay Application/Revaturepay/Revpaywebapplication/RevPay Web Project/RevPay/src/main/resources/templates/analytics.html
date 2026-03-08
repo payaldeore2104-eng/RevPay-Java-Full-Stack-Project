@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout :: page(~{::section})">
+
+<head>
+    <title>Analytics - RevPay</title>
+</head>
+
+<body>
+    <section>
+        <div class="page-title">📊 Business Analytics</div>
+        <div class="page-subtitle">Overview of your money flow and transaction history</div>
+
+        <!-- Analytics Cards -->
+        <div class="analytics-cards grid-3" style="margin-bottom: 30px;">
+            <div class="card stat-card" style="border-left: 4px solid var(--success);">
+                <div class="stat-icon green">⬇️</div>
+                <div>
+                    <h3 class="stat-label">Total Received</h3>
+                    <p class="stat-value" style="color:var(--success);">₹<span
+                            th:text="${totalReceived != null ? #numbers.formatDecimal(totalReceived, 1, 2) : '0.00'}"></span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="card stat-card" style="border-left: 4px solid var(--danger);">
+                <div class="stat-icon red">⬆️</div>
+                <div>
+                    <h3 class="stat-label">Total Sent</h3>
+                    <p class="stat-value" style="color:var(--danger);">₹<span
+                            th:text="${totalSent != null ? #numbers.formatDecimal(totalSent, 1, 2) : '0.00'}"></span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="card stat-card" style="border-left: 4px solid var(--warning);">
+                <div class="stat-icon yellow">⏳</div>
+                <div>
+                    <h3 class="stat-label">Pending Amount</h3>
+                    <p class="stat-value" style="color:var(--warning);">₹<span
+                            th:text="${pendingAmount != null ? #numbers.formatDecimal(pendingAmount, 1, 2) : '0.00'}"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart.js Graph -->
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+            <div class="section-title" style="margin-bottom: 20px;">Money Flow</div>
+            <canvas id="analyticsChart" height="120"></canvas>
+        </div>
+
+        <script th:inline="javascript">
+            document.addEventListener("DOMContentLoaded", function () {
+                var totalReceived = /*[[${totalReceived}]]*/ 0;
+                var totalSent = /*[[${totalSent}]]*/ 0;
+                var pendingAmount = /*[[${pendingAmount}]]*/ 0;
+
+                const ctx = document.getElementById('analyticsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Received', 'Sent', 'Pending'],
+                        datasets: [{
+                            label: 'Amount (₹)',
+                            data: [totalReceived, totalSent, pendingAmount],
+                            backgroundColor: [
+                                '#10B981', // Success Green
+                                '#EF4444', // Danger Red
+                                '#F59E0B'  // Warning Yellow
+                            ],
+                            borderRadius: 6,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function (value) {
+                                        return '₹' + value;
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            });
+        </script>
+    </section>
+</body>
+
+</html>

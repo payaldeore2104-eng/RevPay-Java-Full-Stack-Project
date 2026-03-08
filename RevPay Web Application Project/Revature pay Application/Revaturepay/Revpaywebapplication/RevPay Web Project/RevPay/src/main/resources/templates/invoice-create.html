@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Create Invoice – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <script>
+        function calcTotal() {
+            var qty = parseFloat(document.getElementById('qty').value) || 0;
+            var price = parseFloat(document.getElementById('price').value) || 0;
+            var tax = parseFloat(document.getElementById('tax').value) || 0;
+            var total = (qty * price) + tax;
+            document.getElementById('totalPreview').textContent = '₹' + total.toFixed(2);
+        }
+    </script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Main</a>
+                <a th:href="@{/business/dashboard}">Business</a>
+                <a th:href="@{/business/invoices/create}" class="active">New Invoice</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/business/dashboard}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Cancel</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Business</div>
+                <a th:href="@{/business/dashboard}"><span class="sidebar-icon">🏢</span> Dashboard</a>
+                <a th:href="@{/business/invoices/create}" class="active"><span class="sidebar-icon">🧾</span> Create
+                    Invoice</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="page-title">🧾 Create Invoice</div>
+                <div class="page-subtitle">Generate a professional invoice for your client</div>
+
+                <div style="max-width:600px;">
+                    <div class="card">
+                        <form th:action="@{/business/invoices/create}" method="post">
+                            <div class="section-title mb-16">Customer Details</div>
+                            <div class="form-group">
+                                <label class="form-label">Customer Email / Phone / Account ID</label>
+                                <input type="text" name="customerIdentifier" required class="form-control"
+                                    placeholder="email@example.com or phone or ID" />
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Customer Name</label>
+                                    <input type="text" name="customerName" required class="form-control"
+                                        placeholder="Full Name" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Payment Terms</label>
+                                    <input type="text" name="paymentTerms" class="form-control"
+                                        placeholder="e.g. Net 30, Due on receipt" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Customer Address</label>
+                                <input type="text" name="customerAddress" required class="form-control"
+                                    placeholder="123 Main St, City, State" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Due Date</label>
+                                <input type="date" name="dueDate" required class="form-control" />
+                            </div>
+
+                            <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;" />
+                            <div class="section-title mb-16">Line Item</div>
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <input type="text" name="description" required class="form-control"
+                                    placeholder="Service or product description" />
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Quantity</label>
+                                    <input type="number" id="qty" name="quantity" required min="1" value="1"
+                                        class="form-control" oninput="calcTotal()" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Unit Price (₹)</label>
+                                    <input type="number" id="price" step="0.01" name="price" required min="0.01"
+                                        class="form-control" oninput="calcTotal()" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Tax (₹)</label>
+                                    <input type="number" id="tax" step="0.01" name="tax" required min="0" value="0.00"
+                                        class="form-control" oninput="calcTotal()" />
+                                </div>
+                            </div>
+
+                            <div class="dashboard-card"
+                                style="padding:14px 18px;margin-bottom:20px;justify-content:space-between;align-items:center;display:flex;">
+                                <span style="font-size:13px;opacity:.85;">Invoice Total</span>
+                                <span id="totalPreview" style="font-size:22px;font-weight:800;">₹0.00</span>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block btn-lg">Generate Draft Invoice
+                                →</button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

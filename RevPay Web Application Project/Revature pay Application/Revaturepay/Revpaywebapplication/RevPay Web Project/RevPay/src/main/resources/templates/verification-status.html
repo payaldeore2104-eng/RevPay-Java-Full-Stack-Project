@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Verification Status – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Main</a>
+                <a th:href="@{/business/dashboard}">Business</a>
+                <a th:href="@{/business/verify/status}" class="active">Verification</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/business/dashboard}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Business</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Business</div>
+                <a th:href="@{/business/dashboard}"><span class="sidebar-icon">🏢</span> Business Dashboard</a>
+                <a th:href="@{/business/verify}"><span class="sidebar-icon">🔏</span> Submit Docs</a>
+                <a th:href="@{/business/verify/status}" class="active"><span class="sidebar-icon">⏳</span> Verify
+                    Status</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="page-title">🔏 Verification Status</div>
+                <div class="page-subtitle">Track your document submission and approval progress</div>
+
+                <div th:if="${isVerified}" class="alert alert-success" style="font-size:15px;padding:18px 20px;">
+                    ✅ Your business account is <strong>verified</strong>. You have full access to all business features.
+                </div>
+                <div th:if="${!isVerified}" class="alert alert-warning">
+                    ⏳ Your account is <strong>not yet verified</strong>. Submit verification documents and our team will
+                    review them.
+                </div>
+
+                <div class="flex-between mb-16">
+                    <div class="section-title">📋 My Submissions</div>
+                    <a th:href="@{/business/verify}" class="btn btn-primary btn-sm">+ Submit New Document</a>
+                </div>
+
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="data-table" th:if="${not #lists.isEmpty(docs)}">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Document Type</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th>Admin Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="doc : ${docs}">
+                                    <td th:text="${doc['ID']}"></td>
+                                    <td th:text="${doc['DOC_TYPE']}"></td>
+                                    <td th:text="${doc['DOC_DESCRIPTION'] != null ? doc['DOC_DESCRIPTION'] : '—'}"></td>
+                                    <td><span th:class="'badge badge-' + ${doc['STATUS']}"
+                                            th:text="${doc['STATUS']}"></span></td>
+                                    <td
+                                        th:text="${doc['SUBMITTED_AT'] != null ? #dates.format(doc['SUBMITTED_AT'], 'dd MMM yyyy HH:mm') : '—'}">
+                                    </td>
+                                    <td th:text="${doc['ADMIN_REMARKS'] != null ? doc['ADMIN_REMARKS'] : '—'}"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="empty-state" th:if="${#lists.isEmpty(docs)}">
+                            <div class="empty-icon">📋</div>
+                            <div class="empty-text">No documents submitted yet.</div>
+                            <a th:href="@{/business/verify}" class="btn btn-primary btn-sm"
+                                style="margin-top:12px;">Submit First Document</a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

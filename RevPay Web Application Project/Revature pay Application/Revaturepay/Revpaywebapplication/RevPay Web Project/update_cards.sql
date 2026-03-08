@@ -1,0 +1,2 @@
+ALTER TABLE cards ADD card_type VARCHAR2(20);
+EXIT;

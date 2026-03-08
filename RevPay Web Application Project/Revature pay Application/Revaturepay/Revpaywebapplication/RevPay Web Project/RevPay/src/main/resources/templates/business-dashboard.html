@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Business Dashboard – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Main Dashboard</a>
+                <a th:href="@{/business/dashboard}" class="active">Business</a>
+                <a th:href="@{/business/analytics}">Analytics</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/dashboard}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Dashboard</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Business</div>
+                <a th:href="@{/business/dashboard}" class="active"><span class="sidebar-icon">🏢</span> Business
+                    Dashboard</a>
+                <a th:href="@{/business/invoices/create}"><span class="sidebar-icon">🧾</span> Create Invoice</a>
+                <a th:href="@{/business/analytics}"><span class="sidebar-icon">📊</span> Business Analytics</a>
+                <a th:href="@{/business/verify}"><span class="sidebar-icon">🔏</span> Verification</a>
+                <a th:href="@{/business/verify/status}"><span class="sidebar-icon">⏳</span> Verify Status</a>
+                <div class="sidebar-section-label">Navigation</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Main Dashboard</a>
+                <a th:href="@{/wallet}"><span class="sidebar-icon">👜</span> Wallet</a>
+            </aside>
+            <main class="revpay-main">
+                <!-- Stats Row -->
+                <div class="dashboard-card mb-24">
+                    <div
+                        style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <h2>🏢 Business Operations</h2>
+                            <div style="display:flex;gap:28px;margin-top:12px;">
+                                <div>
+                                    <div style="font-size:12px;opacity:.8;">Total Revenue</div>
+                                    <div style="font-size:22px;font-weight:800;color:var(--success);">₹<span
+                                            th:text="${totalRevenue}">0</span></div>
+                                </div>
+                                <div>
+                                    <div style="font-size:12px;opacity:.8;">Pending</div>
+                                    <div style="font-size:22px;font-weight:800;color:var(--danger);">₹<span
+                                            th:text="${pendingAmount}">0</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                            <a th:href="@{/business/invoices/export/pdf}" class="btn btn-ghost btn-sm">📄 Export PDF</a>
+                            <a th:href="@{/business/analytics}" class="btn btn-sm"
+                                style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);">📊
+                                Analytics</a>
+                            <a th:href="@{/business/verify}" class="btn btn-sm"
+                                style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);">🔏
+                                Verify</a>
+                            <a th:href="@{/business/invoices/create}" class="btn btn-sm"
+                                style="background:#fff;color:var(--primary-blue);font-weight:700;">+ New Invoice</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoices Table -->
+                <div class="page-title">🧾 Your Invoices</div>
+                <div class="page-subtitle mb-20">Manage all client invoices in one place</div>
+
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="data-table" th:if="${not #lists.isEmpty(invoices)}">
+                            <thead>
+                                <tr>
+                                    <th>Invoice ID</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="inv : ${invoices}">
+                                    <td style="font-family:monospace;font-size:12px;" th:text="'INV-' + ${inv.ID}"></td>
+                                    <td th:text="${inv.CUSTOMER_EMAIL}"></td>
+                                    <td style="font-weight:700;" th:text="'₹' + ${inv.TOTAL_AMOUNT}"></td>
+                                    <td th:text="${#calendars.format(inv.DUE_DATE, 'dd MMM yyyy')}"></td>
+                                    <td><span th:class="'badge ' + ${inv.STATUS}" th:text="${inv.STATUS}"></span></td>
+                                    <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                                        <form th:if="${inv.STATUS == 'DRAFT'}" th:action="@{/business/invoices/update}"
+                                            method="post" style="display:inline;">
+                                            <input type="hidden" name="invoiceId" th:value="${inv.ID}" />
+                                            <input type="hidden" name="status" value="SENT" />
+                                            <button class="btn btn-primary btn-sm">Mark Sent</button>
+                                        </form>
+                                        <form th:if="${inv.STATUS == 'SENT' or inv.STATUS == 'OVERDUE'}"
+                                            th:action="@{/business/invoices/update}" method="post"
+                                            style="display:inline;">
+                                            <input type="hidden" name="invoiceId" th:value="${inv.ID}" />
+                                            <input type="hidden" name="status" value="PAID" />
+                                            <button class="btn btn-success btn-sm">Mark Paid</button>
+                                        </form>
+                                        <form th:if="${inv.STATUS != 'PAID' and inv.STATUS != 'CANCELLED'}"
+                                            th:action="@{/business/invoices/cancel}" method="post"
+                                            style="display:inline;">
+                                            <input type="hidden" name="invoiceId" th:value="${inv.ID}" />
+                                            <button class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Cancel this invoice?')">Cancel</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="empty-state" th:if="${#lists.isEmpty(invoices)}">
+                            <div class="empty-icon">🧾</div>
+                            <div class="empty-text">No invoices yet.</div>
+                            <a th:href="@{/business/invoices/create}" class="btn btn-primary btn-sm"
+                                style="margin-top:12px;">Create First Invoice</a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

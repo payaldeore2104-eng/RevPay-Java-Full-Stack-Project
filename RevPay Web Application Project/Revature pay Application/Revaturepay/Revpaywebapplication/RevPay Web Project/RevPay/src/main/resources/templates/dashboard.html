@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Dashboard – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+
+        <!-- Header -->
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}" class="active">Dashboard</a>
+                <a th:href="@{/wallet}">Wallet</a>
+                <a th:href="@{/transactions/history}">Transactions</a>
+                <a th:href="@{/notifications}">Notifications</a>
+            </nav>
+            <div class="header-right">
+                <div class="header-user">👤 <span th:text="${user}">User</span></div>
+                <a th:href="@{/profile}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Profile</a>
+                <a th:href="@{/logout}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Logout</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode"><span
+                        class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+
+        <div class="revpay-body">
+            <!-- Sidebar -->
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Main</div>
+                <a th:href="@{/dashboard}" class="active"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/wallet}"><span class="sidebar-icon">👜</span> Wallet</a>
+                <a th:href="@{/wallet/cards}"><span class="sidebar-icon">💳</span> Cards</a>
+                <a th:href="@{/transactions/send}"><span class="sidebar-icon">💸</span> Send Money</a>
+                <a th:href="@{/transactions/request}"><span class="sidebar-icon">📥</span> Request Money</a>
+                <a th:href="@{/transactions/history}"><span class="sidebar-icon">📋</span> History</a>
+
+                <th:block th:if="${userRole == 'ROLE_BUSINESS' or userRole == 'ROLE_ADMIN'}">
+                    <div class="sidebar-section-label">Business</div>
+                    <a th:href="@{/business/dashboard}"><span class="sidebar-icon">🏢</span> Business Dashboard</a>
+                    <a th:href="@{/business/invoices/create}"><span class="sidebar-icon">🧾</span> Create Invoice</a>
+                </th:block>
+
+                <div class="sidebar-section-label">More</div>
+                <a th:href="@{/loans}"><span class="sidebar-icon">🏦</span> Loans</a>
+                <a th:href="@{/loans/apply}"><span class="sidebar-icon">📝</span> Apply Loan</a>
+                <a th:href="@{/analytics}"><span class="sidebar-icon">📊</span> Analytics</a>
+                <a th:href="@{/analytics/spending}"><span class="sidebar-icon">📈</span> Spending</a>
+                <a th:href="@{/notifications}"><span class="sidebar-icon">🔔</span> Notifications</a>
+                <a th:href="@{/profile}"><span class="sidebar-icon">⚙️</span> Profile</a>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="revpay-main">
+
+                <!-- Pending Invoices Alert -->
+                <th:block th:if="${not #lists.isEmpty(pendingInvoices)}">
+                    <div class="alert alert-warning" style="margin-bottom:20px;">
+                        ⚠️ You have <strong th:text="${#lists.size(pendingInvoices)}"></strong> pending invoice(s)
+                        awaiting payment.
+                    </div>
+                </th:block>
+
+                <!-- Welcome + Balance Grid -->
+                <div class="grid-2" style="margin-bottom:24px;">
+                    <!-- Welcome Card -->
+                    <div class="dashboard-card" style="grid-column:1/-1;">
+                        <div
+                            style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <div style="font-size:14px;opacity:.8;margin-bottom:6px;">Welcome back 👋</div>
+                                <h1 style="font-size:26px;font-weight:800;letter-spacing:-.5px;"
+                                    th:text="'Hello, ' + ${user} + '!'">Hello, User!</h1>
+                                <div style="font-size:13px;opacity:.75;margin-top:4px;">Manage your finances, send
+                                    money, and more.</div>
+                            </div>
+                            <div style="font-size:70px;opacity:.2;">💰</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Row -->
+                <div class="grid-3" style="margin-bottom:28px;">
+                    <div class="stat-card">
+                        <div class="stat-icon green">💰</div>
+                        <div>
+                            <div class="stat-label">Wallet Balance</div>
+                            <div class="stat-value" style="color:var(--success);">₹<span
+                                    th:text="${balance != null ? balance : '0.00'}"></span></div>
+                            <a th:href="@{/wallet}"
+                                style="font-size:11.5px;color:var(--secondary-blue);font-weight:600;margin-top:4px;display:inline-block;">Add
+                                Funds →</a>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue">📋</div>
+                        <div>
+                            <div class="stat-label">Recent Transactions</div>
+                            <div class="stat-value" th:text="${transactions != null ? #lists.size(transactions) : 0}">0
+                            </div>
+                            <a th:href="@{/transactions/history}"
+                                style="font-size:11.5px;color:var(--secondary-blue);font-weight:600;margin-top:4px;display:inline-block;">View
+                                All →</a>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon yellow">🔔</div>
+                        <div>
+                            <div class="stat-label">Unread Notifications</div>
+                            <div class="stat-value" th:text="${notifications != null ? #lists.size(notifications) : 0}">
+                                0</div>
+                            <a th:href="@{/notifications}"
+                                style="font-size:11.5px;color:var(--secondary-blue);font-weight:600;margin-top:4px;display:inline-block;">View
+                                All →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Invoices Section -->
+                <th:block th:if="${not #lists.isEmpty(pendingInvoices)}">
+                    <div class="section-header">
+                        <div class="section-title">⚠️ Pending Invoices</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">
+                        <div th:each="inv : ${pendingInvoices}" class="card card-sm"
+                            style="display:flex;justify-content:space-between;align-items:center;border-left:4px solid var(--danger);">
+                            <div>
+                                <div style="font-weight:700;font-size:15px;">Invoice from <span
+                                        th:text="${inv.BUSINESS_NAME}"></span></div>
+                                <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">
+                                    Amount: <strong style="color:var(--danger);">₹<span
+                                            th:text="${inv.TOTAL_AMOUNT}"></span></strong>
+                                    &nbsp;|&nbsp; Due: <span
+                                        th:text="${#calendars.format(inv.DUE_DATE, 'dd MMM yyyy')}"></span>
+                                </div>
+                            </div>
+                            <form th:action="@{/transactions/pay-invoice}" method="post"
+                                style="display:flex;gap:10px;align-items:center;">
+                                <input type="hidden" name="invoiceId" th:value="${inv.ID}" />
+                                <input type="hidden" name="businessId" th:value="${inv.BUSINESS_ID}" />
+                                <input type="hidden" name="amount" th:value="${inv.TOTAL_AMOUNT}" />
+                                <input type="hidden" name="description"
+                                    th:value="'Payment for Invoice INV-' + ${inv.ID}" />
+                                <input type="password" name="pin" placeholder="Enter PIN" required class="form-control"
+                                    style="width:120px;" />
+                                <button type="submit" class="btn btn-danger btn-sm">Pay Now</button>
+                            </form>
+                        </div>
+                    </div>
+                </th:block>
+
+                <!-- Quick Actions -->
+                <div class="section-header">
+                    <div class="section-title">Quick Actions</div>
+                </div>
+                <div class="grid-auto" style="margin-bottom:28px;">
+                    <a th:href="@{/wallet}" class="action-card">
+                        <div class="action-icon">👜</div>
+                        <div class="action-label">Wallet</div>
+                        <div class="action-desc">Balance &amp; funds</div>
+                    </a>
+                    <a th:href="@{/wallet/cards}" class="action-card">
+                        <div class="action-icon">💳</div>
+                        <div class="action-label">Cards</div>
+                        <div class="action-desc">Manage cards</div>
+                    </a>
+                    <a th:href="@{/transactions/send}" class="action-card">
+                        <div class="action-icon">💸</div>
+                        <div class="action-label">Send Money</div>
+                        <div class="action-desc">Transfer funds</div>
+                    </a>
+                    <a th:href="@{/transactions/request}" class="action-card">
+                        <div class="action-icon">📥</div>
+                        <div class="action-label">Request</div>
+                        <div class="action-desc">Ask for money</div>
+                    </a>
+                    <a th:href="@{/analytics}" class="action-card">
+                        <div class="action-icon">📊</div>
+                        <div class="action-label">Analytics</div>
+                        <div class="action-desc">Money flow overview</div>
+                    </a>
+                    <a th:href="@{/analytics/spending}" class="action-card">
+                        <div class="action-icon">📈</div>
+                        <div class="action-label">Spending Analytics</div>
+                        <div class="action-desc">Spending insights</div>
+                    </a>
+                    <a th:href="@{/transactions/history}" class="action-card">
+                        <div class="action-icon">📋</div>
+                        <div class="action-label">History</div>
+                        <div class="action-desc">All transactions</div>
+                    </a>
+                    <th:block th:if="${userRole == 'ROLE_BUSINESS' or userRole == 'ROLE_ADMIN'}">
+                        <a th:href="@{/business/dashboard}" class="action-card">
+                            <div class="action-icon">🏢</div>
+                            <div class="action-label">Business</div>
+                            <div class="action-desc">Invoices &amp; revenue</div>
+                        </a>
+                    </th:block>
+                    <a th:href="@{/loans}" class="action-card">
+                        <div class="action-icon">🏦</div>
+                        <div class="action-label">Loans</div>
+                        <div class="action-desc">Manage loans</div>
+                    </a>
+                    <a th:href="@{/loans/apply}" class="action-card">
+                        <div class="action-icon">📝</div>
+                        <div class="action-label">Apply Loan</div>
+                        <div class="action-desc">Quick application</div>
+                    </a>
+                    <a th:href="@{/notifications}" class="action-card">
+                        <div class="action-icon">🔔</div>
+                        <div class="action-label">Notifications</div>
+                        <div class="action-desc">Alerts &amp; updates</div>
+                    </a>
+                </div>
+
+                <!-- Recent Transactions + Notifications -->
+                <div class="grid-2">
+                    <!-- Recent Transactions -->
+                    <div class="card">
+                        <div class="section-header">
+                            <div class="section-title">Recent Transactions</div>
+                            <a th:href="@{/transactions/history}" class="btn btn-ghost btn-sm">View All →</a>
+                        </div>
+                        <div th:if="${#lists.isEmpty(transactions)}" class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <div class="empty-text">No recent activity found.</div>
+                        </div>
+                        <div th:each="tx : ${transactions}" class="txn-row">
+                            <div th:if="${tx.SENDER_ID == userId}" class="txn-icon debit">➖</div>
+                            <div th:if="${tx.SENDER_ID != userId}" class="txn-icon credit">➕</div>
+                            <div class="txn-info">
+                                <div class="txn-type" th:text="${tx.TRANSACTION_TYPE}"></div>
+                                <div class="txn-desc" th:text="${tx.DESCRIPTION}"></div>
+                            </div>
+                            <div>
+                                <div th:if="${tx.SENDER_ID == userId}" class="txn-amount debit"
+                                    th:text="'-₹' + ${tx.AMOUNT}">
+                                </div>
+                                <div th:if="${tx.SENDER_ID != userId}" class="txn-amount credit"
+                                    th:text="'+₹' + ${tx.AMOUNT}">
+                                </div>
+                                <div class="txn-time" th:text="${#calendars.format(tx.CREATED_AT, 'dd MMM, HH:mm')}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="card">
+                        <div class="section-header">
+                            <div class="section-title">Notifications</div>
+                            <a th:href="@{/notifications}" class="btn btn-ghost btn-sm">View All →</a>
+                        </div>
+                        <div th:if="${#lists.isEmpty(notifications)}" class="empty-state">
+                            <div class="empty-icon">🎉</div>
+                            <div class="empty-text">You're all caught up!</div>
+                        </div>
+                        <a th:each="n : ${notifications}" th:href="@{/notifications/open/{id}(id=${n.ID})}"
+                            class="notif-item">
+                            <div class="notif-dot"></div>
+                            <div>
+                                <div style="font-size:13.5px;color:var(--text-primary);line-height:1.4;"
+                                    th:text="${n.MESSAGE}">
+                                </div>
+                                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;"
+                                    th:text="${#calendars.format(n.CREATED_AT, 'dd MMM, HH:mm')}"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                </section>
+</body>
+
+</html>

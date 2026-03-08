@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Submit Verification – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <style>
+        .doc-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all .2s;
+        }
+
+        .doc-select:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+            outline: none;
+        }
+
+        .doc-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            transition: all .2s;
+            font-family: inherit;
+        }
+
+        .doc-textarea:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+            outline: none;
+        }
+    </style>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Main</a>
+                <a th:href="@{/business/dashboard}">Business</a>
+                <a th:href="@{/business/verify}" class="active">Verify</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/business/verify/status}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">My
+                    Submissions</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Business</div>
+                <a th:href="@{/business/dashboard}"><span class="sidebar-icon">🏢</span> Dashboard</a>
+                <a th:href="@{/business/verify}" class="active"><span class="sidebar-icon">🔏</span> Submit Docs</a>
+                <a th:href="@{/business/verify/status}"><span class="sidebar-icon">⏳</span> Verify Status</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="page-title">🔏 Business Account Verification</div>
+                <div class="page-subtitle">Submit documents for business account approval</div>
+
+                <div th:if="${param.success}" class="alert alert-success">✅ Document submitted successfully! It is now
+                    under review.</div>
+                <div th:if="${param.error}" class="alert alert-danger">⚠️ Submission failed: <span
+                        th:text="${param.error}"></span></div>
+
+                <div th:if="${user != null and user['IS_VERIFIED'] == 1}" class="alert alert-success"
+                    style="font-size:15px;padding:18px 20px;margin-bottom:20px;">
+                    ✅ Your business account is already <strong>verified</strong>! You have full access to all features.
+                </div>
+
+                <div style="max-width:600px;">
+                    <div class="card">
+                        <div class="section-title mb-4">📄 Submit Verification Document</div>
+                        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;">Provide details about
+                            the document you are submitting. Our team will review it shortly.</p>
+
+                        <form th:action="@{/business/verify}" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label class="form-label">Document Type *</label>
+                                <select name="docType" required class="doc-select">
+                                    <option value="" disabled selected>-- Select document type --</option>
+                                    <option value="Business License">Business License</option>
+                                    <option value="Tax Certificate">Tax Certificate / Tax ID</option>
+                                    <option value="Certificate of Incorporation">Certificate of Incorporation</option>
+                                    <option value="Bank Statement">Bank Statement</option>
+                                    <option value="Government ID">Government-Issued Business ID</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Document Description / Notes</label>
+                                <textarea name="docDescription" class="doc-textarea"
+                                    placeholder="Briefly describe the document, issuing authority, or relevant details..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Upload Document <span
+                                        style="font-weight:400;color:var(--text-muted);">(optional – PDF, JPG, PNG, max
+                                        10MB)</span></label>
+                                <input type="file" name="docFile" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                    class="form-control" />
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block btn-lg">Submit for Review →</button>
+                        </form>
+
+                        <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--text-muted);">
+                            <a th:href="@{/business/verify/status}"
+                                style="color:var(--secondary-blue);font-weight:700;">View my past submissions →</a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

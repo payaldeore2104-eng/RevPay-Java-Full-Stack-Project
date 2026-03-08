@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Notifications – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/wallet}">Wallet</a>
+                <a th:href="@{/notifications}" class="active">Notifications</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/dashboard}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Dashboard</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Navigation</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/wallet}"><span class="sidebar-icon">👜</span> Wallet</a>
+                <a th:href="@{/transactions/send}"><span class="sidebar-icon">💸</span> Send Money</a>
+                <a th:href="@{/transactions/history}"><span class="sidebar-icon">📋</span> History</a>
+                <a th:href="@{/notifications}" class="active"><span class="sidebar-icon">🔔</span> Notifications</a>
+                <a th:href="@{/profile}"><span class="sidebar-icon">⚙️</span> Profile</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="flex-between mb-24">
+                    <div>
+                        <div class="page-title">
+                            🔔 Notifications
+                            <span th:if="${unreadCount > 0}"
+                                style="font-size:14px;background:var(--danger);color:#fff;padding:2px 9px;border-radius:999px;margin-left:8px;font-weight:700;"
+                                th:text="${unreadCount}"></span>
+                        </div>
+                        <div class="page-subtitle">Stay updated with your account activity</div>
+                    </div>
+                    <form th:action="@{/notifications/mark-read}" method="post" th:if="${unreadCount > 0}">
+                        <button type="submit" class="btn btn-outline btn-sm">✅ Mark All Read</button>
+                    </form>
+                </div>
+
+                <div th:if="${error}" class="alert alert-danger">❌ <span th:text="${error}"></span></div>
+
+                <!-- Filter Tabs -->
+                <div class="tab-bar mb-20">
+                    <a th:href="@{/notifications(category='ALL')}" class="tab-btn"
+                        th:classappend="${currentCategory == 'ALL'} ? 'active' : ''">All</a>
+                    <a th:href="@{/notifications(category='TRANSACTION')}" class="tab-btn"
+                        th:classappend="${currentCategory == 'TRANSACTION'} ? 'active' : ''">💸 Transactions</a>
+                    <a th:href="@{/notifications(category='REQUEST')}" class="tab-btn"
+                        th:classappend="${currentCategory == 'REQUEST'} ? 'active' : ''">📥 Requests</a>
+                    <a th:href="@{/notifications(category='ALERT')}" class="tab-btn"
+                        th:classappend="${currentCategory == 'ALERT'} ? 'active' : ''">⚠️ Alerts</a>
+                </div>
+
+                <div class="card">
+                    <div th:each="notif : ${notifications}">
+                        <a th:href="@{/notifications/open/{id}(id=${notif.id})}"
+                            style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);text-decoration:none;cursor:pointer;transition:background .2s;"
+                            th:style="${notif.isRead == 0} ? 'border-left:3px solid var(--accent-blue);padding-left:12px;' : ''">
+                            <div style="width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0;"
+                                th:style="${notif.isRead == 0} ? 'background:var(--accent-blue);' : 'background:var(--border);'">
+                            </div>
+                            <div style="flex:1;">
+                                <div
+                                    style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                                    <div style="font-weight:700;font-size:13.5px;color:var(--text-primary);"
+                                        th:text="${notif.title}"></div>
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <span class="badge badge-neutral" th:text="${notif.type}"
+                                            style="font-size:10px;"></span>
+                                        <form
+                                            th:action="@{/notifications/toggle-read(id=${notif.id}, category=${currentCategory})}"
+                                            method="post" style="display:inline;"
+                                            onclick="event.stopPropagation(); event.preventDefault(); this.submit();">
+                                            <button type="submit"
+                                                style="background:none;border:none;cursor:pointer;font-size:15px;opacity:.6;"
+                                                th:title="${notif.isRead == 0 ? 'Mark as Read' : 'Mark as Unread'}">
+                                                <span th:if="${notif.isRead == 0}">🔔</span>
+                                                <span th:if="${notif.isRead == 1}">🔕</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div style="font-size:13px;color:var(--text-secondary);line-height:1.4;"
+                                    th:text="${notif.message}"></div>
+                                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;"
+                                    th:text="${#calendars.format(notif.createdAt, 'dd MMM yyyy HH:mm')}"></div>
+                            </div>
+                        </a>
+                    </div>
+                    <div th:if="${#lists.isEmpty(notifications)}" class="empty-state">
+                        <div class="empty-icon">🎉</div>
+                        <div class="empty-text">You're all caught up! No notifications to show.</div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

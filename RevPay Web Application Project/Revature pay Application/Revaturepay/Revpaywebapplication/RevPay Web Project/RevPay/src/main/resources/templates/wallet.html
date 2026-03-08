@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>My Wallet – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <style>
+        .source-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: all .2s;
+            appearance: none;
+        }
+
+        .source-select:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+        }
+    </style>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+
+        <!-- Header -->
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/wallet}" class="active">Wallet</a>
+                <a th:href="@{/transactions/history}">Transactions</a>
+                <a th:href="@{/notifications}">Notifications</a>
+            </nav>
+            <div class="header-right">
+                <div class="header-user">👤 <span th:text="${user != null ? user : 'User'}"></span></div>
+                <a th:href="@{/dashboard}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Dashboard</a>
+                <a th:href="@{/logout}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Logout</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Navigation</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/wallet}" class="active"><span class="sidebar-icon">👜</span> Wallet</a>
+                <a th:href="@{/wallet/cards}"><span class="sidebar-icon">💳</span> Cards</a>
+                <a th:href="@{/transactions/send}"><span class="sidebar-icon">💸</span> Send Money</a>
+                <a th:href="@{/transactions/request}"><span class="sidebar-icon">📥</span> Request Money</a>
+                <a th:href="@{/transactions/history}"><span class="sidebar-icon">📋</span> History</a>
+                <div class="sidebar-section-label">More</div>
+                <a th:href="@{/loans}"><span class="sidebar-icon">🏦</span> Loans</a>
+                <a th:href="@{/analytics}"><span class="sidebar-icon">📊</span> Analytics</a>
+                <a th:href="@{/analytics/spending}"><span class="sidebar-icon">📈</span> Spending</a>
+                <a th:href="@{/notifications}"><span class="sidebar-icon">🔔</span> Notifications</a>
+                <a th:href="@{/profile}"><span class="sidebar-icon">⚙️</span> Profile</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="page-title">My Wallet</div>
+                <div class="page-subtitle">Manage your balance, add funds, or withdraw money</div>
+
+                <!-- Alerts -->
+                <div class="alert alert-warning" th:if="${lowBalance}">
+                    ⚠️ Low balance! Your wallet is below <strong th:text="'₹' + threshold">₹50</strong>. Consider adding
+                    funds.
+                </div>
+                <div th:if="${successMsg}" class="alert alert-success">✅ <span th:text="${successMsg}"></span></div>
+                <div th:if="${errorMsg}" class="alert alert-danger">❌ <span th:text="${errorMsg}"></span></div>
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+                <!-- Balance Card -->
+                <div class="dashboard-card mb-24" th:if="${wallet != null}">
+                    <div style="position:relative;z-index:1;">
+                        <h2>💰 Wallet Balance</h2>
+                        <div class="amount" th:text="${'₹' + #numbers.formatDecimal(wallet.balance, 1, 2)}">₹0.00</div>
+                        <div class="subtitle" th:text="'Last updated: ' + ${wallet.updatedAt}">Last updated: —</div>
+                    </div>
+                </div>
+
+                <!-- Add / Withdraw Forms -->
+                <div class="grid-2 mb-24">
+                    <!-- Add Money -->
+                    <div class="card">
+                        <div class="section-title" style="margin-bottom:18px;">💳 Add Money</div>
+                        <form th:action="@{/wallet/add-money}" method="post">
+                            <div class="form-group"
+                                th:if="${(cards != null and !#lists.isEmpty(cards)) or (bankAccounts != null and !#lists.isEmpty(bankAccounts))}">
+                                <label class="form-label">Funding Source</label>
+                                <select name="fundingSource" id="addMoneySource" required class="source-select"
+                                    onchange="togglePin('addMoneyPinGroup','addMoneyPinInput')">
+                                    <option value="">-- Select Source --</option>
+                                    <optgroup label="Bank Accounts"
+                                        th:if="${bankAccounts != null and !#lists.isEmpty(bankAccounts)}">
+                                        <option th:each="bank : ${bankAccounts}" th:value="'BANK_' + ${bank.id}"
+                                            th:text="${bank.bankName} + ' (' + ${bank.accountType} + ')'"></option>
+                                    </optgroup>
+                                    <optgroup label="Payment Cards" th:if="${cards != null and !#lists.isEmpty(cards)}">
+                                        <option th:each="card : ${cards}" th:value="'CARD_' + ${card.id}"
+                                            th:text="${card.cardHolderName} + ' (' + ${card.cardType != null ? card.cardType : 'Card'} + ')'">
+                                        </option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div th:if="${(cards == null or #lists.isEmpty(cards)) and (bankAccounts == null or #lists.isEmpty(bankAccounts))}"
+                                class="alert alert-warning">
+                                No payment methods. <a th:href="@{/wallet/cards}" style="font-weight:700;">Add one →</a>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Amount (INR)</label>
+                                <input type="number" step="0.01" name="amount" required placeholder="0.00" min="0.01"
+                                    class="form-control" />
+                            </div>
+                            <div class="form-group" id="addMoneyPinGroup" style="display:none;">
+                                <label class="form-label">PIN Code</label>
+                                <input type="password" name="cardPin" id="addMoneyPinInput" maxlength="4"
+                                    placeholder="4-digit PIN" class="form-control" style="letter-spacing:5px;" />
+                            </div>
+                            <button type="submit" class="btn btn-success btn-block"
+                                th:disabled="${(cards == null or #lists.isEmpty(cards)) and (bankAccounts == null or #lists.isEmpty(bankAccounts))}">
+                                Add Money →
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Withdraw Money -->
+                    <div class="card">
+                        <div class="section-title" style="margin-bottom:18px;">🏦 Withdraw Money</div>
+                        <form th:action="@{/wallet/withdraw-money}" method="post">
+                            <div class="form-group"
+                                th:if="${(cards != null and !#lists.isEmpty(cards)) or (bankAccounts != null and !#lists.isEmpty(bankAccounts))}">
+                                <label class="form-label">Destination</label>
+                                <select name="destination" id="withdrawMoneySource" required class="source-select"
+                                    onchange="togglePin('withdrawMoneyPinGroup','withdrawMoneyPinInput')">
+                                    <option value="">-- Select Destination --</option>
+                                    <optgroup label="Bank Accounts"
+                                        th:if="${bankAccounts != null and !#lists.isEmpty(bankAccounts)}">
+                                        <option th:each="bank : ${bankAccounts}" th:value="'BANK_' + ${bank.id}"
+                                            th:text="${bank.bankName} + ' (' + ${bank.accountType} + ')'"></option>
+                                    </optgroup>
+                                    <optgroup label="Payment Cards" th:if="${cards != null and !#lists.isEmpty(cards)}">
+                                        <option th:each="card : ${cards}" th:value="'CARD_' + ${card.id}"
+                                            th:text="${card.cardHolderName} + ' (' + ${card.cardType != null ? card.cardType : 'Card'} + ')'">
+                                        </option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div th:if="${(cards == null or #lists.isEmpty(cards)) and (bankAccounts == null or #lists.isEmpty(bankAccounts))}"
+                                class="alert alert-warning">
+                                No payment methods. <a th:href="@{/wallet/cards}" style="font-weight:700;">Add one →</a>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Amount (INR)</label>
+                                <input type="number" step="0.01" name="amount" required placeholder="0.00" min="0.01"
+                                    class="form-control" />
+                            </div>
+                            <div class="form-group" id="withdrawMoneyPinGroup" style="display:none;">
+                                <label class="form-label">PIN Code</label>
+                                <input type="password" name="cardPin" id="withdrawMoneyPinInput" maxlength="4"
+                                    placeholder="4-digit PIN" class="form-control" style="letter-spacing:5px;" />
+                            </div>
+                            <button type="submit" class="btn btn-danger btn-block"
+                                th:disabled="${(cards == null or #lists.isEmpty(cards)) and (bankAccounts == null or #lists.isEmpty(bankAccounts))}">
+                                Withdraw →
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="flex gap-8 mb-24">
+                    <a th:href="@{/wallet/cards}" class="btn btn-outline">💳 Manage Cards</a>
+                    <a th:href="@{/transactions/history}" class="btn btn-ghost">📋 Transaction History</a>
+                </div>
+
+                <!-- Wallet History -->
+                <div class="section-title mb-16">🕑 Recent Wallet Activity</div>
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="data-table" th:if="${history != null and !#lists.isEmpty(history)}">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Direction</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="tx : ${history}">
+                                    <td th:text="${tx['ID']}">—</td>
+                                    <td>
+                                        <span class="badge"
+                                            th:classappend="${tx['DIRECTION'] == 'CREDIT'} ? 'badge-success' : 'badge-danger'"
+                                            th:text="${tx['DIRECTION']}">—</span>
+                                    </td>
+                                    <td style="font-weight:700;" th:text="${'₹' + tx['AMOUNT']}">—</td>
+                                    <td>
+                                        <span th:if="${tx['TRANSACTION_TYPE'] == 'DEPOSIT'}">Money Added</span>
+                                        <span th:if="${tx['TRANSACTION_TYPE'] == 'WITHDRAWAL'}">Withdrawal</span>
+                                        <span
+                                            th:if="${tx['TRANSACTION_TYPE'] != 'DEPOSIT' and tx['TRANSACTION_TYPE'] != 'WITHDRAWAL'}"
+                                            th:text="${tx['TRANSACTION_TYPE']}"></span>
+                                    </td>
+                                    <td th:text="${tx['DESCRIPTION']}">—</td>
+                                    <td><span class="badge badge-info" th:text="${tx['STATUS']}">—</span></td>
+                                    <td th:text="${tx['CREATED_AT']}">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="empty-state" th:if="${history == null or #lists.isEmpty(history)}">
+                            <div class="empty-icon">📭</div>
+                            <div class="empty-text">No transactions yet. Add money or make a transfer to get started.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    function togglePin(groupId, inputId) {
+                        var grp = document.getElementById(groupId);
+                        var inp = document.getElementById(inputId);
+                        var parentForm = document.getElementById(inputId).closest('form');
+                        var parentSelect = parentForm.querySelector('select');
+                        if (parentSelect && parentSelect.value && parentSelect.value.length > 0) {
+                            grp.style.display = 'block';
+                            inp.setAttribute('required', 'required');
+                        } else {
+                            grp.style.display = 'none';
+                            inp.removeAttribute('required');
+                            inp.value = '';
+                        }
+                    }
+                </script>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

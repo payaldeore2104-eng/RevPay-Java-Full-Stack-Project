@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Profile – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <style>
+        .pref-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .pref-row:last-child {
+            border-bottom: none;
+        }
+
+        .pref-row input[type=checkbox] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--secondary-blue);
+            flex-shrink: 0;
+        }
+
+        .security-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+        }
+
+        .security-select:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+        }
+    </style>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/wallet}">Wallet</a>
+                <a th:href="@{/notifications}">Notifications</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/dashboard}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Dashboard</a>
+                <a th:href="@{/logout}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Logout</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Navigation</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/wallet}"><span class="sidebar-icon">👜</span> Wallet</a>
+                <a th:href="@{/transactions/history}"><span class="sidebar-icon">📋</span> History</a>
+                <a th:href="@{/notifications}"><span class="sidebar-icon">🔔</span> Notifications</a>
+                <a th:href="@{/profile}" class="active"><span class="sidebar-icon">⚙️</span> Profile</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="page-title">⚙️ Profile Settings</div>
+                <div class="page-subtitle">Manage your personal details, security, and preferences</div>
+
+                <!-- Success / Error banners -->
+                <div th:if="${param.success != null and param.success[0] == 'profile'}" class="alert alert-success">✅
+                    Profile updated successfully!</div>
+                <div th:if="${param.success != null and param.success[0] == 'password'}" class="alert alert-success">✅
+                    Password updated successfully!</div>
+                <div th:if="${param.success != null and param.success[0] == 'pin'}" class="alert alert-success">✅
+                    Transaction PIN updated successfully!</div>
+                <div th:if="${param.success != null and param.success[0] == 'notifications'}"
+                    class="alert alert-success">✅
+                    Notification preferences saved!</div>
+                <div th:if="${error}" class="alert alert-danger">❌ <span th:text="${error}"></span></div>
+
+                <div class="grid-2">
+                    <!-- Left Column: Profile + Business -->
+                    <div>
+                        <!-- Personal Info -->
+                        <div class="card mb-20">
+                            <div class="section-title mb-16">👤 Personal Information</div>
+                            <form th:action="@{/profile/update}" method="post">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Full Name</label>
+                                        <input type="text" name="fullName" th:value="${user.fullName}" required
+                                            class="form-control" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Phone Number</label>
+                                        <input type="text" name="phone" th:value="${user.phone}" required
+                                            class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" name="email" th:value="${user.email}" required
+                                        class="form-control" />
+                                </div>
+
+                                <div th:if="${user.role == 'ROLE_BUSINESS'}">
+                                    <div class="divider"></div>
+                                    <div class="section-title mb-16">🏢 Business Details</div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">Business Name</label>
+                                            <input type="text" name="businessName" th:value="${user.businessName}"
+                                                class="form-control" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Business Type</label>
+                                            <input type="text" name="businessType" th:value="${user.businessType}"
+                                                class="form-control" />
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label">Tax ID / GST</label>
+                                            <input type="text" name="taxId" th:value="${user.taxId}"
+                                                class="form-control" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Business Address</label>
+                                            <input type="text" name="address" th:value="${user.address}"
+                                                class="form-control" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">💾 Save Profile</button>
+                            </form>
+                        </div>
+
+                        <!-- Transaction PIN -->
+                        <div class="card">
+                            <div class="section-title mb-16">🔐 Transaction PIN</div>
+                            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+                                Your 4-digit PIN secures wallet transfers. Setting or changing it requires email
+                                verification.
+                            </p>
+                            <a th:href="@{/profile/transaction-pin}" class="btn btn-outline">Manage Transaction PIN</a>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Security + Notifications -->
+                    <div>
+                        <!-- Security Questions -->
+                        <div class="card mb-20">
+                            <div class="section-title mb-16">🛡️ Security Questions</div>
+                            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">
+                                Set up security questions to recover your account if you forget your password.
+                            </p>
+                            <form th:action="@{/profile/setup-security}" method="post">
+                                <div class="form-group">
+                                    <label class="form-label">Security Question 1</label>
+                                    <select name="q1Id" required class="security-select">
+                                        <option value="" disabled selected>Select a question...</option>
+                                        <option th:each="q : ${questions}" th:value="${q.ID}" th:text="${q.QUESTION}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Answer 1</label>
+                                    <input type="text" name="a1" required autocomplete="off" class="form-control"
+                                        placeholder="Your answer" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Security Question 2</label>
+                                    <select name="q2Id" required class="security-select">
+                                        <option value="" disabled selected>Select a question...</option>
+                                        <option th:each="q : ${questions}" th:value="${q.ID}" th:text="${q.QUESTION}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Answer 2</label>
+                                    <input type="text" name="a2" required autocomplete="off" class="form-control"
+                                        placeholder="Your answer" />
+                                </div>
+                                <button type="submit" class="btn btn-ghost">🛡️ Save Security Questions</button>
+                            </form>
+                        </div>
+
+                        <!-- Change Password -->
+                        <div class="card mb-20">
+                            <div class="section-title mb-16">🔑 Change Password</div>
+                            <form th:action="@{/profile/change-password}" method="post">
+                                <div class="form-group">
+                                    <label class="form-label">Current Password</label>
+                                    <input type="password" name="oldPassword" required class="form-control"
+                                        placeholder="Your current password" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">New Password</label>
+                                    <input type="password" name="newPassword" required class="form-control"
+                                        placeholder="Choose a strong new password" />
+                                </div>
+                                <button type="submit" class="btn btn-ghost">🔑 Update Password</button>
+                            </form>
+                        </div>
+
+                        <!-- Notification Preferences -->
+                        <div class="card">
+                            <div class="section-title mb-16">🔔 Notification Preferences</div>
+                            <form th:action="@{/profile/update-notifications}" method="post">
+                                <div class="pref-row">
+                                    <input type="checkbox" name="prefNotifTransactions"
+                                        th:checked="${user.prefNotifTransactions == 1}" />
+                                    <label>💸 Transactions (Money Sent / Received)</label>
+                                </div>
+                                <div class="pref-row">
+                                    <input type="checkbox" name="prefNotifRequests"
+                                        th:checked="${user.prefNotifRequests == 1}" />
+                                    <label>📥 Requests (Incoming &amp; Accepted / Declined)</label>
+                                </div>
+                                <div class="pref-row">
+                                    <input type="checkbox" name="prefNotifAlerts"
+                                        th:checked="${user.prefNotifAlerts == 1}" />
+                                    <label>⚠️ Security &amp; Account Alerts (Cards, Low Balance)</label>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="margin-top:16px;">💾 Save
+                                    Preferences</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                </section>
+</body>
+
+</html>

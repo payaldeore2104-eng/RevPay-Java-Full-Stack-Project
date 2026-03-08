@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Verify Email – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body>
+    <button class="auth-float-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+    <div
+        style="display:flex;justify-content:center;align-items:center;min-height:100vh;background:var(--bg);padding:24px;">
+        <div style="width:100%;max-width:420px;">
+            <div class="card fade-in" style="padding:40px;text-align:center;">
+                <div style="font-size:56px;margin-bottom:12px;">📧</div>
+                <div class="auth-title" style="font-size:20px;margin-bottom:6px;">Verify Your Identity</div>
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;line-height:1.5;">
+                    A <strong>6-digit OTP</strong> has been sent to your registered email address.
+                    It expires in <strong>5 minutes</strong>.
+                </p>
+
+                <div th:if="${param.error != null and param.error[0] == 'expired'}" class="alert alert-warning"
+                    style="text-align:left;">
+                    ⏱️ OTP has expired. Please <a th:href="@{/login}"
+                        style="color:var(--secondary-blue);font-weight:700;">login again</a> to get a new code.
+                </div>
+                <div th:if="${param.error != null and param.error[0] == 'true'}" class="alert alert-danger"
+                    style="text-align:left;">
+                    ❌ Invalid verification code. Please try again.
+                </div>
+
+                <form th:action="@{/verify-2fa}" method="post">
+                    <div class="form-group" style="text-align:left;">
+                        <label class="form-label">Verification Code</label>
+                        <input type="text" name="code" required maxlength="6" autocomplete="off"
+                            placeholder="Enter 6-digit code" class="pin-input"
+                            style="font-size:20px;letter-spacing:8px;text-align:center;" />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg">✅ Verify &amp; Login</button>
+                </form>
+
+                <p style="margin-top:16px;font-size:13px;color:var(--text-muted);">
+                    Didn't receive it? Check your spam or
+                    <a th:href="@{/login}" style="color:var(--secondary-blue);">go back and try again</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

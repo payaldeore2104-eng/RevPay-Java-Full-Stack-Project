@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Add Card – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <style>
+        .card-type-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .card-type-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .card-type-label input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--secondary-blue);
+        }
+    </style>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/wallet}">Wallet</a>
+                <a th:href="@{/wallet/cards}" class="active">Cards</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/wallet/cards}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">←
+                    Cards</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Navigation</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/wallet}"><span class="sidebar-icon">👜</span> Wallet</a>
+                <a th:href="@{/wallet/cards}" class="active"><span class="sidebar-icon">💳</span> Cards</a>
+                <a th:href="@{/transactions/history}"><span class="sidebar-icon">📋</span> History</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="page-title">💳 Add Payment Card</div>
+                <div class="page-subtitle">Link a new credit or debit card to your RevPay account</div>
+
+                <div th:if="${error}" class="alert alert-danger">❌ <span th:text="${error}"></span></div>
+
+                <div style="max-width:520px;">
+                    <div class="card">
+                        <!-- Card Preview -->
+                        <div class="payment-card-visual mb-24">
+                            <div class="card-type" id="previewCardType">Credit</div>
+                            <div class="card-name" id="previewName">Cardholder Name</div>
+                            <div class="card-number" id="previewNumber">•••• •••• •••• ••••</div>
+                            <div style="font-size:12px;margin-top:10px;opacity:.8;">Exp: <span
+                                    id="previewExpiry">MM/YY</span></div>
+                        </div>
+
+                        <form th:action="@{/wallet/cards/add}" method="post">
+                            <div class="form-group">
+                                <label class="form-label">Cardholder Name</label>
+                                <input type="text" name="cardHolder" required class="form-control"
+                                    placeholder="Name as on card"
+                                    oninput="document.getElementById('previewName').textContent = this.value || 'Cardholder Name'" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Card Number</label>
+                                <input type="text" name="cardNumber" required minlength="16" maxlength="19"
+                                    class="form-control" placeholder="XXXX XXXX XXXX XXXX"
+                                    oninput="document.getElementById('previewNumber').textContent = this.value || '•••• •••• •••• ••••'" />
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Expiry Date</label>
+                                    <input type="text" name="expiryDate" required placeholder="MM/YY" maxlength="5"
+                                        class="form-control"
+                                        oninput="document.getElementById('previewExpiry').textContent = this.value || 'MM/YY'" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">CVV</label>
+                                    <input type="password" name="cvv" required placeholder="•••" maxlength="4"
+                                        class="form-control" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Billing Address</label>
+                                <input type="text" name="billingAddress" required placeholder="123 Main St, City, State"
+                                    class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Card Type</label>
+                                <div class="card-type-row">
+                                    <label class="card-type-label">
+                                        <input type="radio" name="cardType" value="Credit" required
+                                            onchange="document.getElementById('previewCardType').textContent='Credit'" />
+                                        💙 Credit Card
+                                    </label>
+                                    <label class="card-type-label">
+                                        <input type="radio" name="cardType" value="Debit" required
+                                            onchange="document.getElementById('previewCardType').textContent='Debit'" />
+                                        💚 Debit Card
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Card PIN * <small style="font-weight:400;">(4-digit security
+                                        PIN for transactions)</small></label>
+                                <input type="password" name="cardPin" required placeholder="4-digit PIN" maxlength="4"
+                                    minlength="4" pattern="[0-9]{4}" class="form-control"
+                                    style="letter-spacing:5px;font-size:18px;" />
+                            </div>
+                            <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+                                <input type="checkbox" name="isDefault" id="isDef"
+                                    style="width:16px;height:16px;accent-color:var(--secondary-blue);" />
+                                <label for="isDef" style="font-size:13.5px;font-weight:500;">Set as my default payment
+                                    card</label>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-block btn-lg">Save Card →</button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

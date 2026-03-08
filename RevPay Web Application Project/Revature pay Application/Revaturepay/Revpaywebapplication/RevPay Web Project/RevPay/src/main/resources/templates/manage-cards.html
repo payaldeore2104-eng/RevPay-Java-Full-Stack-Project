@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Manage Cards – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <style>
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 18px;
+        }
+
+        .payment-card-item {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            background: var(--card-bg);
+            overflow: hidden;
+            transition: all .2s;
+        }
+
+        .payment-card-item:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .payment-card-item.default-card {
+            border-color: var(--secondary-blue);
+        }
+
+        .card-item-top {
+            padding: 18px 20px;
+        }
+
+        .card-item-actions {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            background: var(--bg-alt);
+        }
+
+        .edit-form-container {
+            display: none;
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-alt);
+        }
+
+        .bank-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+        }
+
+        .toast-pos {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            z-index: 9999;
+        }
+    </style>
+    <script>
+        function toggleEditForm(cardId) {
+            var form = document.getElementById('edit-form-' + cardId);
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            var params = new URLSearchParams(window.location.search);
+            var success = params.get('success');
+            var messages = {
+                'added': '✅ Card added successfully!',
+                'deleted': '🗑️ Card removed.',
+                'bank_added': '🏦 Bank account linked!',
+                'bank_deleted': '🗑️ Bank account removed.',
+                'default_set': '⭐ Default card updated!',
+                'card_edited': '✏️ Card updated!'
+            };
+            if (success && messages[success]) {
+                var t = document.getElementById('toast');
+                t.textContent = messages[success];
+                t.style.display = 'block';
+                setTimeout(function () { t.style.display = 'none'; }, 3000);
+            }
+        });
+    </script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/wallet}">Wallet</a>
+                <a th:href="@{/wallet/cards}" class="active">Cards</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/wallet}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Wallet</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Navigation</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/wallet}"><span class="sidebar-icon">👜</span> Wallet</a>
+                <a th:href="@{/wallet/cards}" class="active"><span class="sidebar-icon">💳</span> Cards</a>
+                <a th:href="@{/transactions/send}"><span class="sidebar-icon">💸</span> Send Money</a>
+                <a th:href="@{/transactions/history}"><span class="sidebar-icon">📋</span> History</a>
+            </aside>
+            <main class="revpay-main">
+                <!-- Toast -->
+                <div id="toast" class="toast-pos alert alert-success" style="display:none;"></div>
+
+                <!-- Alerts from params -->
+                <div th:if="${param.success != null}" class="alert alert-success">
+                    ✅ <span th:if="${param.success[0] == 'added'}">Card added successfully!</span>
+                    <span th:if="${param.success[0] == 'deleted'}">Card removed.</span>
+                    <span th:if="${param.success[0] == 'bank_added'}">Bank account linked!</span>
+                    <span th:if="${param.success[0] == 'bank_deleted'}">Bank account removed.</span>
+                    <span th:if="${param.success[0] == 'default_set'}">Default card updated!</span>
+                    <span th:if="${param.success[0] == 'card_edited'}">Card updated!</span>
+                </div>
+                <div th:if="${param.error != null}" class="alert alert-danger">❌ <span
+                        th:text="${param.error[0]}"></span></div>
+
+                <!-- Cards -->
+                <div class="flex-between mb-20">
+                    <div>
+                        <div class="page-title">💳 Payment Cards</div>
+                        <div class="page-subtitle">Manage your linked credit and debit cards</div>
+                    </div>
+                    <a th:href="@{/wallet/cards/add}" class="btn btn-primary">+ Add New Card</a>
+                </div>
+
+                <div class="card-grid mb-24" th:if="${not #lists.isEmpty(cards)}">
+                    <div th:each="card : ${cards}" class="payment-card-item"
+                        th:classappend="${card.isDefault == 1} ? 'default-card' : ''">
+                        <!-- Card Visual Mini -->
+                        <div
+                            th:style="${card.isDefault == 1} ? 'background:linear-gradient(135deg,#1E3A8A,#2563EB);color:#fff;padding:16px 20px;' : 'background:linear-gradient(135deg,#374151,#4B5563);color:#fff;padding:16px 20px;'">
+                            <div
+                                style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                                <div style="font-size:11px;opacity:.8;font-weight:600;text-transform:uppercase;letter-spacing:.8px;"
+                                    th:text="${card.cardType != null ? card.cardType + ' Card' : 'Card'}"></div>
+                                <span th:if="${card.isDefault == 1}" class="badge"
+                                    style="background:rgba(255,255,255,.25);color:#fff;font-size:10px;">⭐ Default</span>
+                            </div>
+                            <div style="font-size:15px;letter-spacing:3px;margin-bottom:10px;"
+                                th:text="${card.cardNumberEncrypted}">•••• •••• •••• ••••</div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px;opacity:.85;">
+                                <span th:text="${card.cardHolderName}">Name</span>
+                                <span>Exp: <span th:text="${card.expiryDate}">MM/YY</span></span>
+                            </div>
+                        </div>
+                        <div class="card-item-actions">
+                            <button type="button" class="btn btn-ghost btn-sm"
+                                th:onclick="'toggleEditForm(' + ${card.id} + ')'">✏️ Edit</button>
+                            <form th:action="@{/wallet/cards/default}" method="post" style="display:inline;"
+                                th:if="${card.isDefault == 0}">
+                                <input type="hidden" name="cardId" th:value="${card.id}" />
+                                <button type="submit" class="btn btn-outline btn-sm">⭐ Set Default</button>
+                            </form>
+                            <form th:action="@{/wallet/cards/delete}" method="post" style="display:inline;">
+                                <input type="hidden" name="cardId" th:value="${card.id}" />
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                            </form>
+                        </div>
+                        <!-- Edit Form -->
+                        <div th:id="'edit-form-' + ${card.id}" class="edit-form-container">
+                            <form th:action="@{/wallet/cards/edit}" method="post">
+                                <input type="hidden" name="cardId" th:value="${card.id}" />
+                                <div class="form-group">
+                                    <label class="form-label">Cardholder Name</label>
+                                    <input type="text" name="cardHolder" th:value="${card.cardHolderName}" required
+                                        class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Expiry Date (MM/YY)</label>
+                                    <input type="text" name="expiryDate" th:value="${card.expiryDate}" required
+                                        class="form-control" pattern="(0[1-9]|1[0-2])\/[0-9]{2}" />
+                                </div>
+                                <div style="display:flex;gap:8px;">
+                                    <button type="submit" class="btn btn-success btn-sm">Save</button>
+                                    <button type="button" class="btn btn-ghost btn-sm"
+                                        th:onclick="'toggleEditForm(' + ${card.id} + ')'">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(cards)}" class="card empty-state mb-24">
+                    <div class="empty-icon">💳</div>
+                    <div class="empty-text">No cards linked yet.</div>
+                    <a th:href="@{/wallet/cards/add}" class="btn btn-primary btn-sm" style="margin-top:12px;">Add Your
+                        First Card</a>
+                </div>
+
+                <!-- Bank Accounts -->
+                <div class="flex-between mb-16">
+                    <div class="section-title"
+                        th:text="${userRole == 'ROLE_BUSINESS' or userRole == 'ROLE_ADMIN'} ? '🏦 Business Bank Accounts' : '🏦 Bank Accounts'">
+                        Bank Accounts</div>
+                </div>
+                <div class="card mb-16">
+                    <div class="section-title mb-16">Link New Bank Account</div>
+                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">Please enter the
+                        11-character alphanumeric IFSC code for your bank branch.</p>
+                    <form th:action="@{/wallet/bank-accounts/add}" method="post">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Bank Name</label>
+                                <input type="text" name="bankName" placeholder="e.g., State Bank of India" required
+                                    class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Account Number</label>
+                                <input type="text" name="accountNumber" placeholder="Account Number" required
+                                    class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">IFSC Code</label>
+                                <input type="text" name="ifscCode" placeholder="SBIN0001234" required
+                                    pattern="[A-Za-z0-9]{11}" maxlength="11" class="form-control"
+                                    style="text-transform:uppercase;" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Account Type</label>
+                                <div style="display:flex;gap:20px;padding-top:10px;">
+                                    <label
+                                        style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
+                                        <input type="radio" name="accountType" value="SAVINGS" checked
+                                            style="accent-color:var(--secondary-blue);width:15px;height:15px;" />
+                                        Savings
+                                    </label>
+                                    <label
+                                        style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
+                                        <input type="radio" name="accountType" value="CURRENT"
+                                            style="accent-color:var(--secondary-blue);width:15px;height:15px;" />
+                                        Current
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Link Bank Account</button>
+                    </form>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div th:each="acct : ${bankAccounts}" class="bank-item">
+                        <div style="display:flex;align-items:center;gap:14px;">
+                            <div class="stat-icon blue" style="width:40px;height:40px;font-size:18px;">🏦</div>
+                            <div>
+                                <div style="font-weight:700;font-size:14px;" th:text="${acct.bankName}">Bank</div>
+                                <div style="font-size:12px;color:var(--text-secondary);">
+                                    Acc: <span th:text="${acct.accountNumberEncrypted}"></span> &nbsp;·&nbsp;
+                                    IFSC: <span th:text="${acct.routingNumber}"></span>
+                                    <span class="badge badge-success" style="margin-left:6px;"
+                                        th:text="${acct.accountType}"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <form th:action="@{/wallet/bank-accounts/delete}" method="post">
+                            <input type="hidden" name="accountId" th:value="${acct.id}" />
+                            <button type="submit" class="btn btn-danger btn-sm">🗑️ Remove</button>
+                        </form>
+                    </div>
+                    <div th:if="${#lists.isEmpty(bankAccounts)}" class="empty-state" style="padding:20px 0;">
+                        <div class="empty-icon">🏦</div>
+                        <div class="empty-text">No bank accounts linked.</div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

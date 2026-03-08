@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="page(content)">
+
+<head>
+    <title>RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <!-- Header -->
+        <header class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/wallet}">Wallet</a>
+                <a th:href="@{/transactions/history}">Transactions</a>
+                <a th:href="@{/notifications}">Notifications</a>
+            </nav>
+            <div class="header-right">
+                <div class="header-user">👤 <span th:text="${user != null ? user : 'User'}">User</span></div>
+                <a th:href="@{/profile}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Profile</a>
+                <a th:href="@{/logout}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Logout</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode"><span
+                        class="theme-icon">🌙</span></button>
+            </div>
+        </header>
+
+        <div class="revpay-body main-container">
+            <!-- Sidebar -->
+            <aside class="revpay-sidebar sidebar">
+                <div class="sidebar-section-label">Main</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/wallet}"><span class="sidebar-icon">👜</span> Wallet</a>
+                <a th:href="@{/cards}"><span class="sidebar-icon">💳</span> Cards</a>
+                <a th:href="@{/send}"><span class="sidebar-icon">💸</span> Send Money</a>
+                <a th:href="@{/request}"><span class="sidebar-icon">📥</span> Request Money</a>
+                <a th:href="@{/transactions/history}"><span class="sidebar-icon">📋</span> History</a>
+
+                <th:block th:if="${userRole == 'ROLE_BUSINESS' or userRole == 'ROLE_ADMIN'}">
+                    <div class="sidebar-section-label">Business</div>
+                    <a th:href="@{/business/dashboard}"><span class="sidebar-icon">🏢</span> Business Dashboard</a>
+                    <a th:href="@{/business/invoices/create}"><span class="sidebar-icon">🧾</span> Create Invoice</a>
+                </th:block>
+
+                <div class="sidebar-section-label">More</div>
+                <a th:href="@{/loans}"><span class="sidebar-icon">🏦</span> Loans</a>
+                <a th:href="@{/loans/apply}"><span class="sidebar-icon">📝</span> Apply Loan</a>
+                <a th:href="@{/analytics}"><span class="sidebar-icon">📊</span> Analytics</a>
+                <a th:href="@{/analytics/spending}"><span class="sidebar-icon">📈</span> Spending</a>
+                <a th:href="@{/notifications}"><span class="sidebar-icon">🔔</span> Notifications</a>
+                <a th:href="@{/profile}"><span class="sidebar-icon">⚙️</span> Profile</a>
+            </aside>
+
+            <!-- Main Content Formjected Here -->
+            <main class="revpay-main content">
+                <div th:replace="${content}"></div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

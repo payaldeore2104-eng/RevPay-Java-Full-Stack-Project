@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Analytics – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">💳</div>RevPay
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/dashboard}">Dashboard</a>
+                <a th:href="@{/analytics}" class="active">Analytics</a>
+            </nav>
+            <div class="header-right">
+                <a th:href="@{/dashboard}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Dashboard</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()"><span class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Navigation</div>
+                <a th:href="@{/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/wallet}"><span class="sidebar-icon">👜</span> Wallet</a>
+                <a th:href="@{/transactions/history}"><span class="sidebar-icon">📋</span> History</a>
+                <a th:href="@{/analytics}" class="active"><span class="sidebar-icon">📊</span> Analytics</a>
+                <a th:href="@{/analytics/spending}"><span class="sidebar-icon">📈</span> Spending</a>
+            </aside>
+            <main class="revpay-main">
+                <div class="page-title">📊 Analytics Dashboard</div>
+                <div class="page-subtitle">Overview of your money flow and spending patterns</div>
+
+                <!-- Stats -->
+                <div class="grid-3 mb-24">
+                    <div class="stat-card">
+                        <div class="stat-icon green">💰</div>
+                        <div>
+                            <div class="stat-label">Total Received</div>
+                            <div class="stat-value" style="color:var(--success);" th:text="'₹' + ${totalReceived}">₹0
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">💸</div>
+                        <div>
+                            <div class="stat-label">Total Sent</div>
+                            <div class="stat-value" style="color:var(--danger);" th:text="'₹' + ${totalSent}">₹0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon yellow">⏳</div>
+                        <div>
+                            <div class="stat-label">Pending Amount</div>
+                            <div class="stat-value" style="color:var(--warning);"
+                                th:text="'₹' + ${pendingAmount != null ? pendingAmount : 0.0}">₹0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="card mb-24">
+                    <div class="section-title mb-16">Money Flow Overview</div>
+                    <div style="height:360px;">
+                        <canvas id="analyticsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="card">
+                    <div class="section-title mb-16">More Insights</div>
+                    <div class="grid-auto">
+                        <a th:href="@{/analytics/spending}" class="action-card">
+                            <div class="action-icon">📈</div>
+                            <div class="action-label">Spending Breakdown</div>
+                            <div class="action-desc">Category analysis</div>
+                        </a>
+                        <a th:href="@{/transactions/history}" class="action-card">
+                            <div class="action-icon">📋</div>
+                            <div class="action-label">Full History</div>
+                            <div class="action-desc">All transactions</div>
+                        </a>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var totalReceived = /*[[${totalReceived != null ? totalReceived : 0.0}]]*/ 0.0;
+        var totalSent = /*[[${totalSent != null ? totalSent : 0.0}]]*/ 0.0;
+        var pendingAmount = /*[[${pendingAmount != null ? pendingAmount : 0.0}]]*/ 0.0;
+        var isDark = document.body.classList.contains('dark-mode');
+        var gridColor = isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.06)';
+        var textColor = isDark ? '#94a3b8' : '#64748b';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var ctx = document.getElementById('analyticsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Total Received', 'Total Sent', 'Pending Amount'],
+                    datasets: [{
+                        label: 'Amount (₹)',
+                        data: [totalReceived, totalSent, pendingAmount],
+                        backgroundColor: ['rgba(34,197,94,.75)', 'rgba(239,68,68,.75)', 'rgba(245,158,11,.75)'],
+                        borderColor: ['rgba(34,197,94,1)', 'rgba(239,68,68,1)', 'rgba(245,158,11,1)'],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        maxBarThickness: 100
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: { label: function (ctx) { return '₹' + parseFloat(ctx.raw || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }); } }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, callback: v => '₹' + v } },
+                        x: { grid: { display: false }, ticks: { color: textColor, font: { weight: '600' } } }
+                    },
+                    animation: { duration: 1200, easing: 'easeOutQuart' }
+                }
+            });
+        });
+        /*]]>*/
+    </script>
+</body>
+
+</html>
