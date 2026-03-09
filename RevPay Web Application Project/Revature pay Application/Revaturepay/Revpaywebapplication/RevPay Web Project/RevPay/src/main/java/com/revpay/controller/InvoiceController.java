@@ -192,7 +192,10 @@ public class InvoiceController {
                 }
             }
         } catch (Exception e) {
-            String msg = (e.getMessage() != null) ? e.getMessage() : "Payment failed";
+            String msg = "Payment failed. Please try again.";
+            if (e.getMessage() != null && e.getMessage().contains("Insufficient")) {
+                msg = "Insufficient wallet balance to complete this payment.";
+            }
             response.sendRedirect("/invoices/" + invoiceId + "?error=" +
                     java.net.URLEncoder.encode(msg, "UTF-8"));
             return;

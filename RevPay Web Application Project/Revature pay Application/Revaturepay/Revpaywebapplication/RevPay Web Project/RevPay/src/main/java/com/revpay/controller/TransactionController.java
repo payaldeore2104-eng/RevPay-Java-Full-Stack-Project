@@ -130,7 +130,11 @@ public class TransactionController {
             txService.transferMoney(userId, receiver, amount, description);
             return "redirect:/transactions/history?success=sent";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            String msg = "Payment failed. Please try again.";
+            if (e.getMessage() != null && e.getMessage().contains("Insufficient")) {
+                msg = "Insufficient wallet balance to complete this transfer.";
+            }
+            redirectAttributes.addFlashAttribute("error", msg);
             return "redirect:/transactions/send";
         }
     }
@@ -180,7 +184,11 @@ public class TransactionController {
             txService.transferMoney(userId, receiver, amount, description + " [via Card]");
             return "redirect:/transactions/history?success=sent";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            String msg = "Payment failed. Please try again.";
+            if (e.getMessage() != null && e.getMessage().contains("Insufficient")) {
+                msg = "Insufficient wallet balance to complete this transfer.";
+            }
+            redirectAttributes.addFlashAttribute("error", msg);
             return "redirect:/transactions/send";
         }
     }

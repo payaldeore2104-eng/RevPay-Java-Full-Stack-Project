@@ -88,12 +88,11 @@
                                     <td><span th:class="'badge ' + ${l.STATUS}" th:text="${l.STATUS}"></span></td>
                                     <td th:text="${#calendars.format(l.CREATED_AT, 'dd MMM yyyy')}"></td>
                                     <td>
-                                        <form th:if="${l.STATUS == 'APPROVED'}" th:action="@{/loans/repay}"
-                                            method="post" style="display:inline;">
-                                            <input type="hidden" name="loanId" th:value="${l.ID}" />
-                                            <input type="hidden" name="amount" th:value="${l.EMI_AMOUNT}" />
-                                            <button class="btn btn-success btn-sm">Pay EMI</button>
-                                        </form>
+                                        <button th:if="${l.STATUS == 'APPROVED'}" type="button"
+                                            class="btn btn-success btn-sm"
+                                            th:onclick="'openEmiModal(' + ${l.ID} + ',' + ${l.EMI_AMOUNT} + ');'">
+                                            Pay EMI
+                                        </button>
                                         <span th:if="${l.STATUS != 'APPROVED'}" class="text-muted">—</span>
                                     </td>
                                 </tr>
@@ -108,8 +107,70 @@
                     </div>
                 </div>
             </main>
+                </div>
+    </div>
+
+    <!-- EMI Payment Modal -->
+    <div id="emiModal"
+        style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:999;align-items:center;justify-content:center;">
+        <div class="card" style="max-width:360px;width:100%;padding:20px;">
+            <div class="flex-between" style="margin-bottom:12px;">
+                <div class="page-title" style="font-size:18px;">Confirm EMI Payment</div>
+                <button type="button" class="btn btn-sm" onclick="closeEmiModal()"
+                    style="background:transparent;border:none;font-size:18px;">✕</button>
+            </div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+                Enter your transaction PIN to pay this EMI from your wallet.
+            </p>
+            <div style="margin-bottom:12px;">
+                <div style="font-size:13px;color:var(--text-muted);">Amount</div>
+                <div id="emiAmountLabel" style="font-weight:700;font-size:18px;">₹0.00</div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label class="form-label">Transaction PIN</label>
+                <input type="password" id="emiPinInput" maxlength="6" class="form-control"
+                    style="letter-spacing:5px;font-size:18px;" placeholder="••••••" />
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="closeEmiModal()">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="submitEmiPayment()">Confirm &amp; Pay</button>
+            </div>
+            <form id="emiPayForm" th:action="@{/loans/repay}" method="post">
+                <input type="hidden" name="loanId" id="emiLoanId" />
+                <input type="hidden" name="amount" id="emiAmount" />
+                <input type="hidden" name="pin" id="emiPinHidden" />
+            </form>
         </div>
     </div>
+
+    <script>
+        let currentLoanId = null;
+        let currentAmount = null;
+        function openEmiModal(loanId, amount) {
+            currentLoanId = loanId;
+            currentAmount = amount;
+            document.getElementById('emiLoanId').value = loanId;
+            document.getElementById('emiAmount').value = amount;
+            document.getElementById('emiAmountLabel').textContent = '₹' + parseFloat(amount).toFixed(2);
+            document.getElementById('emiPinInput').value = '';
+            document.getElementById('emiModal').style.display = 'flex';
+            setTimeout(function () {
+                document.getElementById('emiPinInput').focus();
+            }, 50);
+        }
+        function closeEmiModal() {
+            document.getElementById('emiModal').style.display = 'none';
+        }
+        function submitEmiPayment() {
+            const pin = document.getElementById('emiPinInput').value;
+            if (!pin) {
+                alert('Please enter your transaction PIN.');
+                return;
+            }
+            document.getElementById('emiPinHidden').value = pin;
+            document.getElementById('emiPayForm').submit();
+        }
+    </script>
 </body>
 
 </html>

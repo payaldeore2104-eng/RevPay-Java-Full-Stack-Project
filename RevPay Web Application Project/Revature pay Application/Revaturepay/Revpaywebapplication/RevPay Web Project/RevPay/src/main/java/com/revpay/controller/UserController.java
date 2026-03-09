@@ -36,28 +36,26 @@ public class UserController {
         return userService.getUserByLoginId(loginId);
     }
 
-    @GetMapping("/")
-    public String index(HttpSession session) {
-        if (session.getAttribute("loggedInUser") != null) {
-            return "redirect:/dashboard";
-        }
-        return "redirect:/login";
-    }
-
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
         String loginId = (String) session.getAttribute("loggedInUser");
         if (loginId == null)
             return "redirect:/login";
 
+        String role = "";
         // Pass role for conditional sidebar rendering
         try {
-            String role = jdbcTemplate.queryForObject(
+            role = jdbcTemplate.queryForObject(
                     "SELECT role FROM users WHERE email = ? OR phone = ?",
                     String.class, loginId, loginId);
             model.addAttribute("userRole", role != null ? role : "");
         } catch (Exception e) {
             model.addAttribute("userRole", "");
+        }
+
+        // If admin somehow hits the user dashboard, send them to admin dashboard instead
+        if ("ROLE_ADMIN".equals(role)) {
+            return "redirect:/admin/dashboard";
         }
         // Surface access_denied error from business redirect
         if ("access_denied".equals(session.getAttribute("error"))) {

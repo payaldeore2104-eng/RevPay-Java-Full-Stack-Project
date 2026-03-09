@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Admin – Users – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">🛡️</div>RevPay Admin
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/admin/dashboard}">Dashboard</a>
+                <a th:href="@{/admin/users}" class="active">Users</a>
+                <a th:href="@{/admin/transactions}">Transactions</a>
+            </nav>
+            <div class="header-right">
+                <div class="header-user">👤 <span th:text="${user != null ? user : 'Admin'}">Admin</span></div>
+                <a th:href="@{/logout}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Logout</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode"><span
+                        class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Admin</div>
+                <a th:href="@{/admin/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/admin/users}" class="active"><span class="sidebar-icon">👥</span> Users</a>
+                <a th:href="@{/admin/transactions}"><span class="sidebar-icon">📋</span> Transactions</a>
+                <a th:href="@{/admin/loans}"><span class="sidebar-icon">💸</span> Loans</a>
+                <div class="sidebar-section-label">More</div>
+                <a th:href="@{/business/admin/verifications}"><span class="sidebar-icon">🔍</span> Verifications</a>
+            </aside>
+
+            <main class="revpay-main">
+                <div class="page-title">👥 User Management</div>
+                <div class="page-subtitle">Search, review, and block/unblock accounts</div>
+
+                <div class="card" style="padding:16px;margin:16px 0;">
+                    <form method="get" th:action="@{/admin/users}" style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <input class="form-control" name="q" th:value="${q}" placeholder="Search name/email/phone"
+                            style="max-width:420px;" />
+                        <button class="btn btn-primary btn-sm" type="submit">Search</button>
+                        <a class="btn btn-sm" th:href="@{/admin/users}"
+                            style="background:var(--bg-alt);border:1px solid var(--border);">Clear</a>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="data-table" th:if="${users != null and not #lists.isEmpty(users)}">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Role</th>
+                                    <th style="min-width:160px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="u : ${users}">
+                                    <td th:text="${u.id}">1</td>
+                                    <td>
+                                        <div style="font-weight:800;" th:text="${u.fullName}">Name</div>
+                                        <div style="font-size:11.5px;color:var(--text-muted);"
+                                            th:text="${u.isVerified != null and u.isVerified == 1} ? 'Verified' : 'Not verified'">
+                                            Verified
+                                        </div>
+                                    </td>
+                                    <td th:text="${u.email != null ? u.email : '—'}">—</td>
+                                    <td th:text="${u.phone != null ? u.phone : '—'}">—</td>
+                                    <td>₹<span th:text="${u.balance != null ? u.balance : 0}">0</span></td>
+                                    <td>
+                                        <span th:if="${u.status == 'ACTIVE'}" class="badge badge-success">ACTIVE</span>
+                                        <span th:if="${u.status != 'ACTIVE'}" class="badge badge-danger">BLOCKED</span>
+                                    </td>
+                                    <td th:text="${u.role != null ? u.role : '—'}">ROLE</td>
+                                    <td>
+                                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                            <form th:if="${u.status == 'ACTIVE'}"
+                                                th:action="@{/admin/users/{id}/block(id=${u.id})}" method="post">
+                                                <input type="hidden" name="q" th:value="${q}" />
+                                                <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Block this user?')">Block</button>
+                                            </form>
+                                            <form th:if="${u.status != 'ACTIVE'}"
+                                                th:action="@{/admin/users/{id}/unblock(id=${u.id})}" method="post">
+                                                <input type="hidden" name="q" th:value="${q}" />
+                                                <button type="submit" class="btn btn-success btn-sm"
+                                                    onclick="return confirm('Unblock this user and reset login attempts?')">Unblock</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="empty-state" th:if="${users == null or #lists.isEmpty(users)}">
+                            <div class="empty-icon">📭</div>
+                            <div class="empty-text">No users found.</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>
+

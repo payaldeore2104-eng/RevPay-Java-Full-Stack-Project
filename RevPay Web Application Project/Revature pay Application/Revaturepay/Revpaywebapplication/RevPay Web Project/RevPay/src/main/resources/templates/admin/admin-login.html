@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Admin Login – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body>
+    <button class="auth-float-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+        <span class="theme-icon">🌙</span>
+    </button>
+
+    <div class="auth-wrapper">
+        <div class="auth-left">
+            <div style="position:relative;z-index:1;text-align:center;">
+                <div style="font-size:48px;margin-bottom:16px;">🛡️</div>
+                <div class="auth-brand">RevPay Admin</div>
+                <div class="auth-tagline">System monitoring and control panel</div>
+                <div class="auth-features">
+                    <div class="auth-feature">👥 User management</div>
+                    <div class="auth-feature">📋 Transaction monitoring</div>
+                    <div class="auth-feature">📊 System analytics</div>
+                    <div class="auth-feature">🔒 Role-based access</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-right">
+            <div class="auth-form-container fade-in">
+                <div style="font-size:32px;margin-bottom:12px;">🔐</div>
+                <div class="auth-title">Admin sign in</div>
+                <div class="auth-subtitle">Use an account with <strong>ROLE_ADMIN</strong></div>
+
+                <div th:if="${error}" class="alert alert-danger">⚠️ <span th:text="${error}"></span></div>
+
+                <form th:action="@{/admin/login}" th:object="${loginDto}" method="post">
+                    <div class="form-group">
+                        <label class="form-label">Email or Phone Number</label>
+                        <input type="text" th:field="*{loginId}" class="form-control" required
+                            placeholder="admin@revpay.com" autocomplete="username" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div style="position:relative;">
+                            <input type="password" th:field="*{password}" class="form-control" required
+                                placeholder="Enter your password" id="adminPwd" autocomplete="current-password"
+                                style="padding-right:44px;" />
+                            <button type="button" onclick="togglePwd('adminPwd','eyeIconAdmin')"
+                                style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted);"
+                                id="eyeIconAdmin">👁</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:6px;">
+                        Continue →
+                    </button>
+                </form>
+
+                <div class="divider"></div>
+                <div style="text-align:center;font-size:13px;color:var(--text-secondary);">
+                    Back to user login?
+                    <a th:href="@{/login}" style="color:var(--secondary-blue);font-weight:700;">Go to Login →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePwd(id, btnId) {
+            var el = document.getElementById(id);
+            var btn = document.getElementById(btnId);
+            if (el.type === 'password') { el.type = 'text'; btn.textContent = '🙈'; }
+            else { el.type = 'password'; btn.textContent = '👁'; }
+        }
+    </script>
+</body>
+
+</html>
+

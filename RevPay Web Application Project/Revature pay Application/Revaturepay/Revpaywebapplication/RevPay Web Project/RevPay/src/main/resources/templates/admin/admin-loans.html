@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Admin – Loans – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">🛡️</div>RevPay Admin
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/admin/dashboard}">Dashboard</a>
+                <a th:href="@{/admin/users}">Users</a>
+                <a th:href="@{/admin/transactions}">Transactions</a>
+                <a th:href="@{/admin/loans}" class="active">Loans</a>
+            </nav>
+            <div class="header-right">
+                <div class="header-user">👤 <span th:text="${user != null ? user : 'Admin'}">Admin</span></div>
+                <a th:href="@{/logout}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Logout</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode"><span
+                        class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Admin</div>
+                <a th:href="@{/admin/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/admin/users}"><span class="sidebar-icon">👥</span> Users</a>
+                <a th:href="@{/admin/transactions}"><span class="sidebar-icon">📋</span> Transactions</a>
+                <a th:href="@{/admin/loans}" class="active"><span class="sidebar-icon">💸</span> Loans</a>
+                <div class="sidebar-section-label">More</div>
+                <a th:href="@{/business/admin/verifications}"><span class="sidebar-icon">🔍</span> Verifications</a>
+            </aside>
+
+            <main class="revpay-main">
+                <div class="page-title">💸 Loan Requests</div>
+                <div class="page-subtitle">Review, approve, or reject user loans</div>
+
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="data-table" th:if="${loans != null and not #lists.isEmpty(loans)}">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>User</th>
+                                    <th>Amount</th>
+                                    <th>Duration (months)</th>
+                                    <th>Interest %</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="loan : ${loans}">
+                                    <td th:text="${loan.id}">1</td>
+                                    <td th:text="${loan.userEmail}">user@example.com</td>
+                                    <td>₹<span th:text="${loan.amount}">0</span></td>
+                                    <td th:text="${loan.durationMonths}">12</td>
+                                    <td th:text="${loan.interestRate != null ? loan.interestRate : 0}">12.5</td>
+                                    <td>
+                                        <span th:if="${loan.status == 'PENDING'}" class="badge badge-warning">PENDING</span>
+                                        <span th:if="${loan.status == 'APPROVED'}" class="badge badge-success">APPROVED</span>
+                                        <span th:if="${loan.status == 'REJECTED'}" class="badge badge-danger">REJECTED</span>
+                                    </td>
+                                    <td
+                                        th:text="${loan.createdAt != null ? #dates.format(loan.createdAt, 'dd MMM yyyy, HH:mm') : '—'}">
+                                        —
+                                    </td>
+                                    <td>
+                                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                            <form th:if="${loan.status == 'PENDING'}"
+                                                th:action="@{/admin/loans/{id}/approve(id=${loan.id})}" method="post">
+                                                <button type="submit" class="btn btn-success btn-sm"
+                                                    onclick="return confirm('Approve this loan?')">Approve</button>
+                                            </form>
+                                            <form th:if="${loan.status == 'PENDING'}"
+                                                th:action="@{/admin/loans/{id}/reject(id=${loan.id})}" method="post">
+                                                <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Reject this loan?')">Reject</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="empty-state" th:if="${loans == null or #lists.isEmpty(loans)}">
+                            <div class="empty-icon">📭</div>
+                            <div class="empty-text">No loan requests found.</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>
+

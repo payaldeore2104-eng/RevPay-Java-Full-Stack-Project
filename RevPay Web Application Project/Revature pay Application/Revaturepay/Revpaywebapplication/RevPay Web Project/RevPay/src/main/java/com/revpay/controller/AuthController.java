@@ -98,8 +98,16 @@ public class AuthController {
             session.removeAttribute("pending2FA");
             session.removeAttribute("twoFACode");
             session.removeAttribute("twoFAExpiry");
+            String postLoginRedirect = (String) session.getAttribute("postLoginRedirect");
+            session.removeAttribute("postLoginRedirect");
             // Set session timeout (10 minutes)
             session.setMaxInactiveInterval(10 * 60);
+            if (postLoginRedirect != null && !postLoginRedirect.trim().isEmpty()) {
+                if (!postLoginRedirect.startsWith("/")) {
+                    postLoginRedirect = "/" + postLoginRedirect;
+                }
+                return "redirect:" + postLoginRedirect;
+            }
             return "redirect:/dashboard";
         }
         return "redirect:/verify-2fa?error=true";

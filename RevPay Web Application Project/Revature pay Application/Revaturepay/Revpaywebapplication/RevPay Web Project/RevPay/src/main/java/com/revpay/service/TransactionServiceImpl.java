@@ -107,7 +107,16 @@ public class TransactionServiceImpl implements TransactionService {
                 .addValue("p_description", description)
                 .addValue("p_transaction_id", transactionId);
 
-        Map<String, Object> out = jdbcCall.execute(in);
+        Map<String, Object> out;
+        try {
+            out = jdbcCall.execute(in);
+        } catch (org.springframework.dao.DataAccessException e) {
+            String msg = e.getMessage();
+            if (msg != null && (msg.contains("ORA-20001") || msg.contains("Insufficient"))) {
+                throw new Exception("Insufficient wallet balance.");
+            }
+            throw e;
+        }
         Number txId = (Number) out.get("p_out_tx_id");
         // Notifications are inserted by the transfer_money stored procedure itself.
         // We patch reference_url so that clicking the notification navigates to
@@ -241,7 +250,15 @@ public class TransactionServiceImpl implements TransactionService {
                     .addValue("p_description", "Money Request Payment")
                     .addValue("p_transaction_id", transactionId);
 
-            transferCall.execute(transferIn); // throws on insufficient balance
+            try {
+                transferCall.execute(transferIn); // throws on insufficient balance
+            } catch (org.springframework.dao.DataAccessException e) {
+                String msg = e.getMessage();
+                if (msg != null && (msg.contains("ORA-20001") || msg.contains("Insufficient"))) {
+                    throw new Exception("Insufficient wallet balance to complete this request.");
+                }
+                throw e;
+            }
 
             // 3. Mark request as ACCEPTED using jdbcTemplate
             int updated = jdbcTemplate.update(

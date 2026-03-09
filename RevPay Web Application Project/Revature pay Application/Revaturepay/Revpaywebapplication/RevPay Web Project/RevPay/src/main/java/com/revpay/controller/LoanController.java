@@ -1,6 +1,7 @@
 package com.revpay.controller;
 
 import com.revpay.util.TransactionIdGenerator;
+import com.revpay.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.SqlOutParameter;
@@ -25,6 +26,9 @@ public class LoanController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private UserService userService;
 
     private String getLoggedInEmail(HttpSession session) {
         return (String) session.getAttribute("loggedInUser");
@@ -211,6 +215,7 @@ public class LoanController {
     @PostMapping("/repay")
     public String repayLoan(@RequestParam("loanId") Long loanId,
             @RequestParam("amount") Double amount,
+            @RequestParam("pin") String pin,
             HttpSession session) {
         Long userId = getUserId(session);
         try {
@@ -221,6 +226,16 @@ public class LoanController {
 
             if (!"APPROVED".equals(loan.get("STATUS"))) {
                 return "redirect:/loans?error=loan_not_approved";
+            }
+
+            // Verify transaction PIN before debiting EMI
+            try {
+                boolean pinValid = userService.validatePin(userId, pin);
+                if (!pinValid) {
+                    return "redirect:/loans?error=invalid_pin";
+                }
+            } catch (Exception e) {
+                return "redirect:/loans?error=pin_verification_failed";
             }
 
             // Simple JDBC call wrapper for withdraw_money

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Admin – Transactions – RevPay</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" th:href="@{/css/theme.css}" />
+    <script th:src="@{/js/theme-toggle.js}"></script>
+</head>
+
+<body class="fade-in">
+    <div class="revpay-wrapper">
+        <div class="revpay-header">
+            <div class="brand">
+                <div class="brand-icon">🛡️</div>RevPay Admin
+            </div>
+            <nav class="header-nav">
+                <a th:href="@{/admin/dashboard}">Dashboard</a>
+                <a th:href="@{/admin/users}">Users</a>
+                <a th:href="@{/admin/transactions}" class="active">Transactions</a>
+            </nav>
+            <div class="header-right">
+                <div class="header-user">👤 <span th:text="${user != null ? user : 'Admin'}">Admin</span></div>
+                <a th:href="@{/logout}" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">Logout</a>
+                <button class="btn-theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode"><span
+                        class="theme-icon">🌙</span></button>
+            </div>
+        </div>
+
+        <div class="revpay-body">
+            <aside class="revpay-sidebar">
+                <div class="sidebar-section-label">Admin</div>
+                <a th:href="@{/admin/dashboard}"><span class="sidebar-icon">🏠</span> Dashboard</a>
+                <a th:href="@{/admin/users}"><span class="sidebar-icon">👥</span> Users</a>
+                <a th:href="@{/admin/transactions}" class="active"><span class="sidebar-icon">📋</span> Transactions</a>
+                <a th:href="@{/admin/loans}"><span class="sidebar-icon">💸</span> Loans</a>
+                <div class="sidebar-section-label">More</div>
+                <a th:href="@{/business/admin/verifications}"><span class="sidebar-icon">🔍</span> Verifications</a>
+            </aside>
+
+            <main class="revpay-main">
+                <div class="page-title">📋 Transaction Monitoring</div>
+                <div class="page-subtitle">Search transactions across the whole system</div>
+
+                <div class="card" style="padding:16px;margin:16px 0;">
+                    <form method="get" th:action="@{/admin/transactions}"
+                        style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">
+                        <div style="flex:1;min-width:240px;max-width:420px;">
+                            <label class="form-label" style="margin-bottom:6px;">Search</label>
+                            <input class="form-control" name="q" th:value="${q}"
+                                placeholder="Tx ID, name, email, phone, description" />
+                        </div>
+                        <div style="min-width:170px;">
+                            <label class="form-label" style="margin-bottom:6px;">Status</label>
+                            <select class="form-control" name="status">
+                                <option value="" th:selected="${status == ''}">All</option>
+                                <option value="COMPLETED" th:selected="${status == 'COMPLETED'}">COMPLETED</option>
+                                <option value="FAILED" th:selected="${status == 'FAILED'}">FAILED</option>
+                                <option value="PENDING" th:selected="${status == 'PENDING'}">PENDING</option>
+                            </select>
+                        </div>
+                        <div style="min-width:170px;">
+                            <label class="form-label" style="margin-bottom:6px;">Type</label>
+                            <select class="form-control" name="type">
+                                <option value="" th:selected="${type == ''}">All</option>
+                                <option value="TRANSFER" th:selected="${type == 'TRANSFER'}">TRANSFER</option>
+                                <option value="DEPOSIT" th:selected="${type == 'DEPOSIT'}">DEPOSIT</option>
+                                <option value="WITHDRAWAL" th:selected="${type == 'WITHDRAWAL'}">WITHDRAWAL</option>
+                            </select>
+                        </div>
+                        <div style="min-width:160px;">
+                            <label class="form-label" style="margin-bottom:6px;">From</label>
+                            <input class="form-control" type="date" name="startDate" th:value="${startDate}" />
+                        </div>
+                        <div style="min-width:160px;">
+                            <label class="form-label" style="margin-bottom:6px;">To</label>
+                            <input class="form-control" type="date" name="endDate" th:value="${endDate}" />
+                        </div>
+                        <button class="btn btn-primary btn-sm" type="submit">Search</button>
+                        <a class="btn btn-sm" th:href="@{/admin/transactions}"
+                            style="background:var(--bg-alt);border:1px solid var(--border);">Clear</a>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table class="data-table" th:if="${transactions != null and not #lists.isEmpty(transactions)}">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Sender</th>
+                                    <th>Receiver</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="t : ${transactions}">
+                                    <td>
+                                        <div style="font-weight:800;" th:text="${t.transactionId}">TX</div>
+                                        <div style="font-size:11.5px;color:var(--text-muted);"
+                                            th:text="${t.transactionRefId != null ? t.transactionRefId : '—'}">—</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:700;" th:text="${t.senderName != null ? t.senderName : '—'}">
+                                            —
+                                        </div>
+                                        <div style="font-size:11.5px;color:var(--text-muted);"
+                                            th:text="${t.senderContact != null ? t.senderContact : '—'}">—</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:700;"
+                                            th:text="${t.receiverName != null ? t.receiverName : '—'}">—</div>
+                                        <div style="font-size:11.5px;color:var(--text-muted);"
+                                            th:text="${t.receiverContact != null ? t.receiverContact : '—'}">—</div>
+                                    </td>
+                                    <td style="font-weight:800;">₹<span th:text="${t.amount != null ? t.amount : 0}">0</span></td>
+                                    <td th:text="${t.createdAt != null ? #dates.format(t.createdAt, 'dd MMM yyyy, HH:mm') : '—'}">
+                                        —
+                                    </td>
+                                    <td>
+                                        <span th:class="'badge ' + ${t.status}" th:text="${t.status}">COMPLETED</span>
+                                    </td>
+                                    <td th:text="${t.transactionType != null ? t.transactionType : '—'}">—</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="empty-state" th:if="${transactions == null or #lists.isEmpty(transactions)}">
+                            <div class="empty-icon">📭</div>
+                            <div class="empty-text">No transactions found.</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>
+

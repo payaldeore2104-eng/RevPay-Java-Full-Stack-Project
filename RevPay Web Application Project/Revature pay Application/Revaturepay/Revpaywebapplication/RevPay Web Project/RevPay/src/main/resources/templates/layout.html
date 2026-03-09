@@ -45,6 +45,11 @@
                 <a th:href="@{/request}"><span class="sidebar-icon">📥</span> Request Money</a>
                 <a th:href="@{/transactions/history}"><span class="sidebar-icon">📋</span> History</a>
 
+                <th:block th:if="${userRole == 'ROLE_ADMIN'}">
+                    <div class="sidebar-section-label">Admin</div>
+                    <a th:href="@{/admin/dashboard}"><span class="sidebar-icon">🛡️</span> Admin Panel</a>
+                </th:block>
+
                 <th:block th:if="${userRole == 'ROLE_BUSINESS' or userRole == 'ROLE_ADMIN'}">
                     <div class="sidebar-section-label">Business</div>
                     <a th:href="@{/business/dashboard}"><span class="sidebar-icon">🏢</span> Business Dashboard</a>
